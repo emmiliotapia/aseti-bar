@@ -339,28 +339,29 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4.5">
                 {productosFiltrados.map(prod => (
-                  <div
+                  <button
                     key={prod.id}
-                    className="p-3.5 rounded-2xl bg-[#14171E] border border-[#1F2833] flex flex-col justify-between gap-3 shadow-lg hover:border-[#C5A059]/40 transition-all overflow-hidden"
+                    onClick={() => agregarProducto(prod)}
+                    className="p-3.5 rounded-2xl bg-[#14171E] active:bg-[#1F2833] border border-[#1F2833] hover:border-[#C5A059]/50 active:border-[#C5A059] flex flex-col justify-between gap-3 shadow-lg active:scale-95 transition-all text-left cursor-pointer overflow-hidden group select-none"
                   >
-                    {/* Foto o Emoji si no hay URL */}
+                    {/* Foto o Emoji */}
                     <div className="h-32 w-full rounded-xl bg-gradient-to-br from-[#1F2833] to-[#0B0C10] border border-[#1F2833] overflow-hidden flex items-center justify-center relative">
                       {prod.imagen_url ? (
                         <img
                           src={prod.imagen_url}
                           alt={prod.nombre}
-                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300 pointer-events-none"
                           onError={(e) => { e.target.style.display = 'none'; }}
                         />
                       ) : (
-                        <span className="text-4xl">{prod.emoji || "🍺"}</span>
+                        <span className="text-4xl pointer-events-none">{prod.emoji || "🍺"}</span>
                       )}
                       <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs font-mono text-[10px] text-white">
                         {prod.categoria}
                       </div>
                     </div>
 
-                    <div className="space-y-0.5 text-center">
+                    <div className="space-y-0.5 text-center w-full">
                       <h3 className="font-bold text-sm text-white line-clamp-1">{prod.nombre}</h3>
                       <p className="text-[11px] text-[#8E9297] line-clamp-1">{prod.descripcion || prod.categoria}</p>
                       <div className="font-['JetBrains_Mono'] font-extrabold text-base text-[#C5A059] pt-1">
@@ -368,14 +369,14 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => agregarProducto(prod)}
-                      className="w-full h-11 flex items-center justify-center gap-1.5 bg-[#C5A059] active:bg-[#D4AF37] text-[#0B0C10] font-black text-xs tracking-wider uppercase rounded-xl shadow-[0_4px_14px_rgba(197,160,89,0.2)] transition active:scale-95 cursor-pointer"
+                    {/* Botón visual de confirmación */}
+                    <div
+                      className="w-full h-11 flex items-center justify-center gap-1.5 bg-[#C5A059] group-active:bg-[#D4AF37] text-[#0B0C10] font-black text-xs tracking-wider uppercase rounded-xl shadow-[0_4px_14px_rgba(197,160,89,0.2)] transition"
                     >
                       <Plus size={16} strokeWidth={3} />
                       <span>Agregar</span>
-                    </button>
-                  </div>
+                    </div>
+                  </button>
                 ))}
               </div>
             )}
