@@ -1,14 +1,17 @@
 @import "tailwindcss";
 
 @theme {
-  --color-obsidian-main: #0B0C10;
-  --color-obsidian-card: #14171E;
-  --color-obsidian-panel: #1F2833;
-  --color-obsidian-border: #2C3540;
+  --color-marejada-main: #0C1821;
+  --color-marejada-card: #142430;
+  --color-marejada-panel: #1B3B4B;
+  --color-marejada-border: #264653;
 
-  --color-gold-base: #C5A059;
-  --color-gold-light: #D4AF37;
-  --color-gold-dark: #9E7D3B;
+  --color-terracota: #E76F51;
+  --color-terracota-dark: #C85A3D;
+  --color-arena: #E9C46A;
+  --color-ocre: #D48C46;
+  --color-crema: #F4EBD9;
+  --color-bruma: #93A8AC;
 
   --font-display: 'Syne', sans-serif;
   --font-body: 'Plus Jakarta Sans', sans-serif;
@@ -16,14 +19,15 @@
 }
 
 :root {
-  --bg-main: #0B0C10;
-  --bg-panel: #1F2833;
-  --color-gold: #C5A059;
+  --bg-main: #0C1821;
+  --bg-panel: #142430;
+  --color-accent: #E76F51;
+  --color-arena: #E9C46A;
 }
 
 body {
-  background-color: #0B0C10;
-  color: #C5C6C7;
+  background-color: #0C1821;
+  color: #F4EBD9;
   font-family: 'Plus Jakarta Sans', sans-serif;
   user-select: none;
   -webkit-user-select: none;

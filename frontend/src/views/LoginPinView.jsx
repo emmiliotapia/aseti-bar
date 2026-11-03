@@ -60,35 +60,35 @@ export default function LoginPinView({ onLoginSuccess }) {
   ];
 
   return (
-    <div className="w-screen h-screen bg-[#0B0C10] text-[#C5C6C7] font-['Plus_Jakarta_Sans'] flex flex-col items-center justify-center p-6 select-none overflow-hidden relative">
-      <div className="absolute top-1/4 w-96 h-96 bg-[#C5A059]/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="w-screen h-screen bg-[#0C1821] text-[#F4EBD9] font-['Plus_Jakarta_Sans'] flex flex-col items-center justify-center p-6 select-none overflow-hidden relative">
+      <div className="absolute top-1/4 w-96 h-96 bg-[#E76F51]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4">
+      <div className="w-full max-w-sm bg-[#142430] border border-[#264653] rounded-3xl p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4">
         
-        <div className="flex flex-col items-center space-y-1">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#9E7D3B] flex items-center justify-center text-[#0B0C10] shadow-[0_0_20px_rgba(197,160,89,0.35)]">
-            <KeyRound size={24} strokeWidth={2.5} />
+        <div className="flex flex-col items-center space-y-1.5 text-center">
+          <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-[#E9C46A]/50 shadow-[0_0_20px_rgba(233,196,106,0.25)] bg-[#0C1821] flex items-center justify-center">
+            <img src="/logo.jpeg" alt="Marejada Logo" className="w-full h-full object-cover" />
           </div>
           <h1 className="font-['Syne'] font-extrabold text-2xl text-white tracking-wider pt-1">
-            ASETI <span className="text-[#C5A059]">BAR</span>
+            MAREJADA
           </h1>
-          <p className="text-[11px] font-['JetBrains_Mono'] tracking-widest text-[#8E9297] uppercase">
-            Acceso Personal Autorizado
+          <p className="text-[10px] font-['JetBrains_Mono'] tracking-widest text-[#E9C46A] uppercase font-bold">
+            Café • Cocina • Bar
           </p>
         </div>
 
         {/* Campo para Escribir el Usuario */}
         <div className="w-full space-y-1">
-          <label className="text-[11px] font-mono uppercase text-[#8E9297] block">Usuario / Mesero</label>
+          <label className="text-[11px] font-mono uppercase text-[#93A8AC] block">Usuario / Mesero</label>
           <div className="relative">
-            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8E9297]" />
+            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#93A8AC]" />
             <input
               type="text"
               autoFocus
               value={usuarioInput}
               onChange={(e) => setUsuarioInput(e.target.value)}
               placeholder="Ej. emilio, carlos, admin"
-              className="w-full h-11 pl-10 pr-3 bg-[#0B0C10] border border-[#1F2833] focus:border-[#C5A059] rounded-xl text-xs text-white placeholder-[#8E9297] outline-none transition"
+              className="w-full h-11 pl-10 pr-3 bg-[#0C1821] border border-[#264653] focus:border-[#E76F51] rounded-xl text-xs text-white placeholder-[#93A8AC] outline-none transition"
             />
           </div>
         </div>
@@ -100,21 +100,21 @@ export default function LoginPinView({ onLoginSuccess }) {
               key={index}
               className={`w-3.5 h-3.5 rounded-full transition-all duration-150 ${
                 pin.length > index
-                  ? "bg-[#C5A059] scale-125 shadow-[0_0_10px_rgba(197,160,89,0.8)]"
-                  : "bg-[#1F2833] border border-[#2C3540]"
+                  ? "bg-[#E76F51] scale-125 shadow-[0_0_12px_rgba(231,111,81,0.8)]"
+                  : "bg-[#1B3B4B] border border-[#264653]"
               }`}
             />
           ))}
         </div>
 
         {errorMsg ? (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-red-400 font-bold bg-red-950/30 px-3 py-2 rounded-xl border border-red-900/40 w-full text-center">
-            <ShieldAlert size={16} className="shrink-0" />
+          <div className="flex items-center justify-center gap-1.5 text-xs text-red-300 font-bold bg-red-950/40 px-3 py-2 rounded-xl border border-red-800/50 w-full text-center">
+            <ShieldAlert size={16} className="shrink-0 text-red-400" />
             <span className="leading-tight">{errorMsg}</span>
           </div>
         ) : (
-          <div className="h-6 text-[10px] text-[#8E9297] text-center font-mono">
-            * El cajero/mesero requiere pase de lista previo del Admin
+          <div className="h-6 text-[10px] text-[#93A8AC] text-center font-mono">
+            * El personal requiere asistencia autorizada del Admin hoy
           </div>
         )}
 
@@ -127,7 +127,7 @@ export default function LoginPinView({ onLoginSuccess }) {
                   key={tecla}
                   onClick={handleBackspace}
                   disabled={cargando}
-                  className="h-14 rounded-xl bg-[#1F2833] active:bg-[#2C3540] border border-[#2C3540] text-red-400 font-bold flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
+                  className="h-14 rounded-xl bg-[#1B3B4B] active:bg-[#264653] border border-[#264653] text-[#E76F51] font-bold flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
                   aria-label="Borrar"
                 >
                   <Delete size={20} />
@@ -141,7 +141,7 @@ export default function LoginPinView({ onLoginSuccess }) {
                   key={tecla}
                   onClick={handleClear}
                   disabled={cargando}
-                  className="h-14 rounded-xl bg-[#1F2833] active:bg-[#2C3540] border border-[#2C3540] text-[#8E9297] font-mono font-bold text-sm flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
+                  className="h-14 rounded-xl bg-[#1B3B4B] active:bg-[#264653] border border-[#264653] text-[#93A8AC] font-mono font-bold text-sm flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
                   aria-label="Limpiar"
                 >
                   C
@@ -154,7 +154,7 @@ export default function LoginPinView({ onLoginSuccess }) {
                 key={tecla}
                 onClick={() => handleDigit(tecla)}
                 disabled={cargando}
-                className="h-14 rounded-xl bg-[#14171E] active:bg-[#C5A059] active:text-[#0B0C10] border border-[#1F2833] active:border-[#C5A059] text-white font-mono font-extrabold text-xl flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
+                className="h-14 rounded-xl bg-[#0C1821] active:bg-[#E76F51] active:text-[#0C1821] border border-[#264653] active:border-[#E76F51] text-[#F4EBD9] font-mono font-extrabold text-xl flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
               >
                 {tecla}
               </button>
@@ -162,7 +162,7 @@ export default function LoginPinView({ onLoginSuccess }) {
           })}
         </div>
 
-        <div className="w-full pt-2 border-t border-[#1F2833]/60 flex items-center justify-between text-[10px] font-mono text-[#8E9297]">
+        <div className="w-full pt-2 border-t border-[#264653]/60 flex items-center justify-between text-[10px] font-mono text-[#93A8AC]">
           <span>emilio : 1234</span>
           <span>admin : 9999</span>
           <span>carlos : 1111</span>
