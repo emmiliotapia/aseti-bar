@@ -4,13 +4,7 @@ from database import Base
 
 # ========================================================
 # DIRECTIVAS sqlite-pos-rules.md:
-# 1. CERO INVENTARIOS (No stock, no existencias).
-# 2. usuarios (id, nombre, pin, rol).
-# 3. turnos (id, usuario_id, fondo_inicial, fecha_apertura, fecha_cierre, estado).
-# 4. configuracion (clave, valor).
-# 5. productos (id, nombre, precio, categoria, color_boton, descripcion, emoji).
-# 6. tickets (id, turno_id, total, fecha_hora, metodo_pago, cajero_id).
-# 7. partidas (id, ticket_id, producto_id, subtotal, cantidad).
+# CERO INVENTARIOS
 # ========================================================
 
 class Usuario(Base):
@@ -18,11 +12,24 @@ class Usuario(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nombre = Column(String, nullable=False)
-    pin = Column(String, unique=True, nullable=False, index=True)
-    rol = Column(String, nullable=False) # 'cajero' | 'admin'
-    cargo = Column(String, default="Personal de Barra", nullable=False)
+    usuario = Column(String, unique=True, nullable=False, index=True) # user login
+    pin = Column(String, nullable=False)
+    rol = Column(String, nullable=False) # 'cajero' | 'mesero' | 'admin'
+    cargo = Column(String, default="Personal de Servicio", nullable=False)
 
     turnos = relationship("Turno", back_populates="usuario")
+    asistencias = relationship("Asistencia", back_populates="usuario")
+
+
+class Asistencia(Base):
+    __tablename__ = "asistencias"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
+    tipo = Column(String, nullable=False) # 'entrada' | 'salida'
+    fecha_hora = Column(DateTime, server_default=func.now(), nullable=False)
+
+    usuario = relationship("Usuario", back_populates="asistencias")
 
 
 class Turno(Base):
@@ -56,6 +63,7 @@ class Producto(Base):
     color_boton = Column(String, default="#14171E", nullable=False)
     descripcion = Column(String, default="", nullable=False)
     emoji = Column(String, default="🍺", nullable=False)
+    imagen_url = Column(Text, default="", nullable=False) # Soporte para fotos / URLs
 
     partidas = relationship("Partida", back_populates="producto")
 
@@ -64,7 +72,7 @@ class Ticket(Base):
     __tablename__ = "tickets"
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
-    turno_id = Column(Integer, ForeignKey("turnos.id"), nullable=True) # opcional si no hay turno estricto
+    turno_id = Column(Integer, ForeignKey("turnos.id"), nullable=True)
     total = Column(Float, nullable=False)
     fecha_hora = Column(DateTime, server_default=func.now(), nullable=False)
     metodo_pago = Column(String, nullable=False) # 'efectivo' | 'tarjeta'

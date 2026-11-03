@@ -1,17 +1,31 @@
 const API_BASE = 'http://127.0.0.1:8000';
 
 export const api = {
-  // Autenticación
-  login: async (pin) => {
+  // Autenticación por Usuario + PIN
+  login: async (usuario, pin) => {
     const res = await fetch(`${API_BASE}/auth/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ pin }),
+      body: JSON.stringify({ usuario, pin }),
     });
     if (!res.ok) {
       const err = await res.json();
       throw new Error(err.detail || 'Error de autenticación');
     }
+    return res.json();
+  },
+
+  // Asistencia (Entrada / Salida)
+  marcarAsistencia: async (usuario_id, tipo) => {
+    const res = await fetch(`${API_BASE}/asistencia/marcar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario_id, tipo }),
+    });
+    return res.json();
+  },
+  getAsistencias: async () => {
+    const res = await fetch(`${API_BASE}/asistencia/historial`);
     return res.json();
   },
 
@@ -43,7 +57,7 @@ export const api = {
     return res.json();
   },
 
-  // Cajeros / Usuarios
+  // Cajeros / Meseros
   getUsuarios: async () => {
     const res = await fetch(`${API_BASE}/usuarios`);
     return res.json();
@@ -56,16 +70,8 @@ export const api = {
     });
     if (!res.ok) {
       const err = await res.json();
-      throw new Error(err.detail || 'Error al crear usuario');
+      throw new Error(err.detail || 'Error al registrar usuario');
     }
-    return res.json();
-  },
-  updateUsuario: async (id, data) => {
-    const res = await fetch(`${API_BASE}/usuarios/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
     return res.json();
   },
   deleteUsuario: async (id) => {
@@ -75,9 +81,21 @@ export const api = {
     return res.json();
   },
 
-  // Turnos y Cortes
+  // Turnos & Fondo Inicial
   getTurnoActivo: async () => {
     const res = await fetch(`${API_BASE}/turnos/activo`);
+    return res.json();
+  },
+  abrirTurno: async (usuario_id, fondo_inicial) => {
+    const res = await fetch(`${API_BASE}/turnos/apertura`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ usuario_id, fondo_inicial }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Error al iniciar turno');
+    }
     return res.json();
   },
   getCorteX: async () => {
@@ -91,6 +109,12 @@ export const api = {
     return res.json();
   },
 
+  // Reportes
+  getReporteVentas: async () => {
+    const res = await fetch(`${API_BASE}/reportes/ventas`);
+    return res.json();
+  },
+
   // Ventas (Ticket)
   registrarTicket: async (data) => {
     const res = await fetch(`${API_BASE}/ventas/ticket`, {
@@ -98,7 +122,7 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
-    if (!res.ok) throw new Error('Error al registrar ticket');
+    if (!res.ok) throw new Error('Error al registrar venta');
     return res.json();
   },
 

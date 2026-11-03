@@ -2,7 +2,7 @@ from pydantic import BaseModel, ConfigDict
 from typing import List, Optional
 from datetime import datetime
 
-# --- SCHEMAS DE PRODUCTO (CATÁLOGO ABM) ---
+# --- SCHEMAS DE PRODUCTO ---
 class ProductoBase(BaseModel):
     nombre: str
     precio: float
@@ -10,6 +10,7 @@ class ProductoBase(BaseModel):
     color_boton: Optional[str] = "#14171E"
     descripcion: Optional[str] = ""
     emoji: Optional[str] = "🍺"
+    imagen_url: Optional[str] = ""
 
 class ProductoCreate(ProductoBase):
     pass
@@ -21,24 +22,27 @@ class ProductoUpdate(BaseModel):
     color_boton: Optional[str] = None
     descripcion: Optional[str] = None
     emoji: Optional[str] = None
+    imagen_url: Optional[str] = None
 
 class Producto(ProductoBase):
     id: int
     model_config = ConfigDict(from_attributes=True)
 
 
-# --- SCHEMAS DE USUARIO (CAJEROS & ROLES) ---
+# --- SCHEMAS DE USUARIO ---
 class UsuarioBase(BaseModel):
     nombre: str
+    usuario: str
     pin: str
-    rol: str # 'cajero' | 'admin'
-    cargo: Optional[str] = "Personal de Barra"
+    rol: str # 'cajero' | 'mesero' | 'admin'
+    cargo: Optional[str] = "Personal de Servicio"
 
 class UsuarioCreate(UsuarioBase):
     pass
 
 class UsuarioUpdate(BaseModel):
     nombre: Optional[str] = None
+    usuario: Optional[str] = None
     pin: Optional[str] = None
     rol: Optional[str] = None
     cargo: Optional[str] = None
@@ -46,16 +50,31 @@ class UsuarioUpdate(BaseModel):
 class Usuario(BaseModel):
     id: int
     nombre: str
+    usuario: str
     pin: str
     rol: str
     cargo: str
     model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
+    usuario: str
     pin: str
 
 
-# --- SCHEMAS DE TURNO (CORTE X & CORTE Z) ---
+# --- SCHEMAS DE ASISTENCIA ---
+class AsistenciaCreate(BaseModel):
+    usuario_id: int
+    tipo: str # 'entrada' | 'salida'
+
+class AsistenciaResponse(BaseModel):
+    id: int
+    usuario_id: int
+    tipo: str
+    fecha_hora: datetime
+    model_config = ConfigDict(from_attributes=True)
+
+
+# --- SCHEMAS DE TURNO ---
 class TurnoApertura(BaseModel):
     usuario_id: int
     fondo_inicial: float
@@ -71,15 +90,6 @@ class Turno(BaseModel):
     fecha_cierre: Optional[datetime] = None
     estado: str
     model_config = ConfigDict(from_attributes=True)
-
-
-# --- SCHEMAS DE CONFIGURACIÓN ---
-class ConfiguracionItem(BaseModel):
-    clave: str
-    valor: str
-
-class ConfiguracionBulk(BaseModel):
-    configuraciones: List[ConfiguracionItem]
 
 
 # --- SCHEMAS DE PARTIDAS Y TICKETS ---

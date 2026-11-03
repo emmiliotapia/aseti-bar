@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Delete, KeyRound, ShieldAlert, User, ShieldCheck, Loader2 } from 'lucide-react';
+import { Delete, KeyRound, ShieldAlert, User, ShieldCheck, Loader2, Clock } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function LoginPinView({ onLoginSuccess }) {
+  const [usuarioInput, setUsuarioInput] = useState('');
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [cargando, setCargando] = useState(false);
+  const [asistenciaMsg, setAsistenciaMsg] = useState('');
 
   const handleDigit = (digit) => {
     if (pin.length < 4 && !cargando) {
@@ -14,7 +16,11 @@ export default function LoginPinView({ onLoginSuccess }) {
       setErrorMsg('');
 
       if (nuevoPin.length === 4) {
-        verificarPin(nuevoPin);
+        if (!usuarioInput.trim()) {
+          setErrorMsg('Escriba primero el usuario');
+          return;
+        }
+        ejecutarLogin(usuarioInput.trim(), nuevoPin);
       }
     }
   };
@@ -33,17 +39,37 @@ export default function LoginPinView({ onLoginSuccess }) {
     }
   };
 
-  const verificarPin = async (pinIngresado) => {
+  const ejecutarLogin = async (user, pinCode) => {
     setCargando(true);
     try {
-      const usuario = await api.login(pinIngresado);
-      onLoginSuccess(usuario);
+      const usuarioLogueado = await api.login(user, pinCode);
+      onLoginSuccess(usuarioLogueado);
     } catch (err) {
-      setErrorMsg(err.message || 'PIN Incorrecto');
+      setErrorMsg(err.message || 'Usuario o PIN incorrecto');
       setTimeout(() => {
         setPin('');
         setCargando(false);
       }, 500);
+    }
+  };
+
+  // Marcar Asistencia rápida (Check-in reloj checador)
+  const marcarAsistenciaReloj = async (tipo) => {
+    if (!usuarioInput.trim() || pin.length < 4) {
+      setErrorMsg('Ingresa usuario y PIN para checar');
+      return;
+    }
+    setCargando(true);
+    try {
+      const user = await api.login(usuarioInput.trim(), pin);
+      await api.marcarAsistencia(user.id, tipo);
+      setAsistenciaMsg(`✅ Asistencia (${tipo.toUpperCase()}) registrada: ${user.nombre}`);
+      setPin('');
+      setTimeout(() => setAsistenciaMsg(''), 3000);
+    } catch (err) {
+      setErrorMsg(err.message || 'Error al validar credencial');
+    } finally {
+      setCargando(false);
     }
   };
 
@@ -58,56 +84,65 @@ export default function LoginPinView({ onLoginSuccess }) {
     <div className="w-screen h-screen bg-[#0B0C10] text-[#C5C6C7] font-['Plus_Jakarta_Sans'] flex flex-col items-center justify-center p-6 select-none overflow-hidden relative">
       <div className="absolute top-1/4 w-96 h-96 bg-[#C5A059]/10 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-8 shadow-2xl flex flex-col items-center relative z-10 space-y-6">
+      <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4">
         
-        <div className="flex flex-col items-center space-y-2">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#9E7D3B] flex items-center justify-center text-[#0B0C10] shadow-[0_0_20px_rgba(197,160,89,0.35)]">
-            <KeyRound size={28} strokeWidth={2.5} />
+        <div className="flex flex-col items-center space-y-1">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-[#D4AF37] to-[#9E7D3B] flex items-center justify-center text-[#0B0C10] shadow-[0_0_20px_rgba(197,160,89,0.35)]">
+            <KeyRound size={24} strokeWidth={2.5} />
           </div>
           <h1 className="font-['Syne'] font-extrabold text-2xl text-white tracking-wider pt-1">
             ASETI <span className="text-[#C5A059]">BAR</span>
           </h1>
-          <p className="text-xs font-['JetBrains_Mono'] tracking-widest text-[#8E9297] uppercase">
-            Acceso por Código PIN
+          <p className="text-[11px] font-['JetBrains_Mono'] tracking-widest text-[#8E9297] uppercase">
+            Acceso Personal y Asistencia
           </p>
         </div>
 
-        {/* Indicadores de PIN */}
-        <div className="flex items-center gap-4 py-2">
-          {[0, 1, 2, 3].map((index) => {
-            const activo = pin.length > index;
-            return (
-              <div
-                key={index}
-                className={`w-4 h-4 rounded-full transition-all duration-150 ${
-                  activo
-                    ? "bg-[#C5A059] scale-125 shadow-[0_0_12px_rgba(197,160,89,0.8)]"
-                    : "bg-[#1F2833] border border-[#2C3540]"
-                }`}
-              />
-            );
-          })}
+        {/* Campo para Escribir el Usuario */}
+        <div className="w-full space-y-1">
+          <label className="text-[11px] font-mono uppercase text-[#8E9297] block">Usuario / Mesero</label>
+          <div className="relative">
+            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8E9297]" />
+            <input
+              type="text"
+              autoFocus
+              value={usuarioInput}
+              onChange={(e) => setUsuarioInput(e.target.value)}
+              placeholder="Ej. emilio, admin, carlos"
+              className="w-full h-11 pl-10 pr-3 bg-[#0B0C10] border border-[#1F2833] focus:border-[#C5A059] rounded-xl text-xs text-white placeholder-[#8E9297] outline-none transition"
+            />
+          </div>
         </div>
 
-        {/* Mensaje de Estado / Error */}
-        {cargando ? (
-          <div className="flex items-center gap-2 text-xs text-[#C5A059] font-bold">
-            <Loader2 size={16} className="animate-spin" />
-            <span>Validando credencial...</span>
+        {/* Indicadores de PIN */}
+        <div className="flex items-center gap-3 py-1">
+          {[0, 1, 2, 3].map((index) => (
+            <div
+              key={index}
+              className={`w-3.5 h-3.5 rounded-full transition-all duration-150 ${
+                pin.length > index
+                  ? "bg-[#C5A059] scale-125 shadow-[0_0_10px_rgba(197,160,89,0.8)]"
+                  : "bg-[#1F2833] border border-[#2C3540]"
+              }`}
+            />
+          ))}
+        </div>
+
+        {asistenciaMsg && (
+          <div className="text-[11px] text-emerald-400 font-bold bg-emerald-950/40 p-2 rounded-lg border border-emerald-500/40 text-center w-full animate-pulse">
+            {asistenciaMsg}
           </div>
-        ) : errorMsg ? (
-          <div className="flex items-center gap-1.5 text-xs text-red-400 font-bold bg-red-950/30 px-3 py-1.5 rounded-lg border border-red-900/40">
+        )}
+
+        {errorMsg && (
+          <div className="flex items-center justify-center gap-1.5 text-xs text-red-400 font-bold bg-red-950/30 px-3 py-1.5 rounded-lg border border-red-900/40 w-full">
             <ShieldAlert size={14} />
             <span>{errorMsg}</span>
-          </div>
-        ) : (
-          <div className="h-7 text-[11px] text-[#8E9297] flex items-center gap-1">
-            <span>Ingrese su clave de 4 dígitos</span>
           </div>
         )}
 
         {/* Teclado Táctil */}
-        <div className="grid grid-cols-3 gap-3 w-full">
+        <div className="grid grid-cols-3 gap-2.5 w-full">
           {TECLAS.map((tecla) => {
             if (tecla === 'DEL') {
               return (
@@ -115,10 +150,10 @@ export default function LoginPinView({ onLoginSuccess }) {
                   key={tecla}
                   onClick={handleBackspace}
                   disabled={cargando}
-                  className="h-16 rounded-2xl bg-[#1F2833] active:bg-[#2C3540] border border-[#2C3540] text-red-400 font-bold flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md disabled:opacity-50"
-                  aria-label="Borrar dígito"
+                  className="h-14 rounded-xl bg-[#1F2833] active:bg-[#2C3540] border border-[#2C3540] text-red-400 font-bold flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
+                  aria-label="Borrar"
                 >
-                  <Delete size={22} />
+                  <Delete size={20} />
                 </button>
               );
             }
@@ -129,8 +164,8 @@ export default function LoginPinView({ onLoginSuccess }) {
                   key={tecla}
                   onClick={handleClear}
                   disabled={cargando}
-                  className="h-16 rounded-2xl bg-[#1F2833] active:bg-[#2C3540] border border-[#2C3540] text-[#8E9297] font-['JetBrains_Mono'] font-bold text-base flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md disabled:opacity-50"
-                  aria-label="Limpiar todo"
+                  className="h-14 rounded-xl bg-[#1F2833] active:bg-[#2C3540] border border-[#2C3540] text-[#8E9297] font-mono font-bold text-sm flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
+                  aria-label="Limpiar"
                 >
                   C
                 </button>
@@ -142,7 +177,7 @@ export default function LoginPinView({ onLoginSuccess }) {
                 key={tecla}
                 onClick={() => handleDigit(tecla)}
                 disabled={cargando}
-                className="h-16 rounded-2xl bg-[#14171E] active:bg-[#C5A059] active:text-[#0B0C10] border border-[#1F2833] active:border-[#C5A059] text-white font-['JetBrains_Mono'] font-extrabold text-2xl flex items-center justify-center transition-all duration-75 active:scale-95 cursor-pointer shadow-md disabled:opacity-50"
+                className="h-14 rounded-xl bg-[#14171E] active:bg-[#C5A059] active:text-[#0B0C10] border border-[#1F2833] active:border-[#C5A059] text-white font-mono font-extrabold text-xl flex items-center justify-center transition active:scale-95 cursor-pointer shadow-md"
               >
                 {tecla}
               </button>
@@ -150,13 +185,30 @@ export default function LoginPinView({ onLoginSuccess }) {
           })}
         </div>
 
+        {/* Botones de Asistencia (Entrada / Salida reloj) */}
+        <div className="grid grid-cols-2 gap-2 w-full pt-1">
+          <button
+            onClick={() => marcarAsistenciaReloj('entrada')}
+            className="py-2.5 bg-[#1F2833] hover:bg-[#2C3540] border border-[#2C3540] text-emerald-400 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            <Clock size={13} />
+            <span>Checar Entrada</span>
+          </button>
+
+          <button
+            onClick={() => marcarAsistenciaReloj('salida')}
+            className="py-2.5 bg-[#1F2833] hover:bg-[#2C3540] border border-[#2C3540] text-amber-400 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            <Clock size={13} />
+            <span>Checar Salida</span>
+          </button>
+        </div>
+
+        {/* Pistas Demo */}
         <div className="w-full pt-2 border-t border-[#1F2833]/60 flex items-center justify-between text-[10px] font-mono text-[#8E9297]">
-          <span className="flex items-center gap-1">
-            <User size={12} className="text-[#C5A059]" /> Cajero: 1234
-          </span>
-          <span className="flex items-center gap-1">
-            <ShieldCheck size={12} className="text-amber-400" /> Admin: 9999
-          </span>
+          <span>emilio : 1234</span>
+          <span>admin : 9999</span>
+          <span>carlos : 1111</span>
         </div>
 
       </div>

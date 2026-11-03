@@ -22,7 +22,8 @@ import {
   Edit3,
   Shield,
   Grid,
-  Loader2
+  Loader2,
+  DollarSign
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -46,9 +47,13 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [cobroExitoso, setCobroExitoso] = useState(false);
   const [notaOrden, setNotaOrden] = useState('');
 
+  // Turno activo y modal de fondo inicial
+  const [turnoActivo, setTurnoActivo] = useState(null);
+  const [modalFondo, setModalFondo] = useState(false);
+  const [fondoInput, setFondoInput] = useState('1000');
+
   const esAdmin = usuario?.rol === 'admin';
 
-  // Cargar catálogo desde SQLite vía FastAPI
   const cargarCatalogo = async () => {
     try {
       setCargando(true);
@@ -61,9 +66,35 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
     }
   };
 
+  const verificarTurno = async () => {
+    try {
+      const t = await api.getTurnoActivo();
+      if (!t && !esAdmin) {
+        setModalFondo(true);
+      } else {
+        setTurnoActivo(t);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
   useEffect(() => {
     cargarCatalogo();
+    verificarTurno();
   }, []);
+
+  const iniciarTurnoConFondo = async (e) => {
+    e.preventDefault();
+    try {
+      const fondo = parseFloat(fondoInput) || 0;
+      const nuevo = await api.abrirTurno(usuario.id, fondo);
+      setTurnoActivo(nuevo);
+      setModalFondo(false);
+    } catch (err) {
+      alert(err.message);
+    }
+  };
 
   const categorias = ["Todos", ...new Set(productos.map(p => p.categoria))];
 
@@ -98,7 +129,6 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
     return coincideCat && coincideBusq;
   });
 
-  // Registro real en backend y base de datos SQLite
   const ejecutarCobro = async (metodo) => {
     if (ticketItems.length === 0 || cobrando) return;
     setCobrando(true);
@@ -107,6 +137,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         total,
         metodo_pago: metodo,
         cajero_id: usuario?.nombre || "Cajero",
+        turno_id: turnoActivo?.id || null,
         partidas: ticketItems.map(item => ({
           producto_id: item.id,
           cantidad: item.cantidad,
@@ -122,7 +153,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         setCobrando(false);
       }, 1200);
     } catch (err) {
-      alert("Error al procesar cobro en base de datos: " + err.message);
+      alert("Error al procesar cobro: " + err.message);
       setCobrando(false);
     }
   };
@@ -130,7 +161,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   return (
     <div className="flex h-screen w-screen bg-[#0B0C10] text-[#C5C6C7] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
       
-      {/* 1. SIDEBAR LATERAL: CAJERO VS ADMIN */}
+      {/* SIDEBAR */}
       <aside className="w-64 bg-[#14171E] border-r border-[#1F2833] flex flex-col justify-between p-4 shrink-0">
         <div className="space-y-6">
           <div className="flex items-center gap-3 px-3 py-2">
@@ -141,7 +172,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               <h1 className="font-['Syne'] font-extrabold text-base tracking-wider text-white">
                 ASETI <span className="text-[#C5A059]">BAR</span>
               </h1>
-              <p className="text-[10px] font-['JetBrains_Mono'] tracking-widest text-[#8E9297] uppercase">
+              <p className="text-[10px] font-mono tracking-widest text-[#8E9297] uppercase">
                 {esAdmin ? 'Modo Administrador' : 'Modo Caja Activa'}
               </p>
             </div>
@@ -149,7 +180,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
           <nav className="space-y-1.5" aria-label="Navegación">
             <button
-              className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)] transition-all active:scale-95 cursor-pointer"
+              className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)] transition active:scale-95 cursor-pointer"
             >
               <LayoutDashboard size={18} />
               <span>Punto de Venta</span>
@@ -163,15 +194,15 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
                 <button
                   onClick={() => onSwitchToAdmin('catalogo')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <UtensilsCrossed size={18} />
-                  <span>Catálogo & Menú</span>
+                  <span>Catálogo & Fotos</span>
                 </button>
 
                 <button
                   onClick={() => onSwitchToAdmin('corte')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <Receipt size={18} />
                   <span>Cortes X & Z</span>
@@ -179,15 +210,15 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
                 <button
                   onClick={() => onSwitchToAdmin('cajeros')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <Users size={18} />
-                  <span>Gestión de Cajeros</span>
+                  <span>Cajeros & Meseros</span>
                 </button>
 
                 <button
                   onClick={() => onSwitchToAdmin('configuracion')}
-                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <Settings size={18} />
                   <span>Configuración</span>
@@ -218,7 +249,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         </div>
       </aside>
 
-      {/* 2. CATÁLOGO TÁCTIL */}
+      {/* CATÁLOGO PRINCIPAL */}
       <section className="flex-1 flex flex-col min-w-0 bg-[#0B0C10] border-r border-[#1F2833]">
         <header className="h-20 px-8 bg-[#14171E] border-b border-[#1F2833] flex items-center justify-between gap-6 shrink-0">
           <div className="relative flex-1 max-w-md">
@@ -233,14 +264,12 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           </div>
 
           <div className="flex items-center gap-4">
-            <button
-              aria-label="Refrescar catálogo"
-              onClick={cargarCatalogo}
-              className="w-12 h-12 rounded-2xl bg-[#0B0C10] border border-[#1F2833] flex items-center justify-center text-[#8E9297] hover:text-[#C5A059] transition active:scale-95 cursor-pointer"
-              title="Refrescar catálogo"
-            >
-              <Bell size={18} />
-            </button>
+            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B0C10] border border-[#1F2833] text-xs font-mono">
+              <span className="text-[#8E9297]">Turno:</span>
+              <span className="font-bold text-[#C5A059]">
+                {turnoActivo ? `#${turnoActivo.id} ($${turnoActivo.fondo_inicial})` : 'Sin abrir'}
+              </span>
+            </div>
 
             <div className="flex items-center gap-3 pl-2 border-l border-[#1F2833]">
               <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-['Syne'] font-extrabold text-sm ${
@@ -249,11 +278,9 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 {usuario?.nombre ? usuario.nombre.substring(0, 2).toUpperCase() : 'US'}
               </div>
               <div className="text-left">
-                <div className="text-xs font-bold text-white leading-tight">{usuario?.nombre || 'Cajero'}</div>
-                <div className={`text-[10px] font-['JetBrains_Mono'] uppercase tracking-wider font-semibold ${
-                  esAdmin ? 'text-amber-400' : 'text-[#C5A059]'
-                }`}>
-                  {usuario?.cargo || (esAdmin ? 'Administrador' : 'Cajero')}
+                <div className="text-xs font-bold text-white leading-tight">{usuario?.nombre || 'Usuario'}</div>
+                <div className="text-[10px] font-mono uppercase tracking-wider text-[#C5A059] font-semibold">
+                  {usuario?.cargo || usuario?.rol}
                 </div>
               </div>
             </div>
@@ -261,7 +288,6 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         </header>
 
         <div className="flex-1 overflow-y-auto p-8 space-y-7">
-          {/* Selector de Categorías */}
           <div className="space-y-3">
             <h2 className="font-['Syne'] font-bold text-base text-white tracking-wide">Categorías</h2>
             <div className="flex gap-3 overflow-x-auto pb-1">
@@ -272,7 +298,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                   <button
                     key={cat}
                     onClick={() => setCategoriaActiva(cat)}
-                    className={`h-20 min-w-[120px] px-4 flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all duration-100 active:scale-95 cursor-pointer shadow-md ${
+                    className={`h-20 min-w-[120px] px-4 flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all active:scale-95 cursor-pointer shadow-md ${
                       isActive
                         ? "bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_6px_20px_rgba(197,160,89,0.3)] font-black"
                         : "bg-[#14171E] border-[#1F2833] text-[#8E9297] hover:border-[#2C3540] hover:text-white"
@@ -286,7 +312,6 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             </div>
           </div>
 
-          {/* Grid de Productos */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-['Syne'] font-bold text-base text-white tracking-wide">
@@ -300,24 +325,37 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             {cargando ? (
               <div className="py-20 flex flex-col items-center justify-center text-[#8E9297] space-y-3">
                 <Loader2 size={36} className="animate-spin text-[#C5A059]" />
-                <span className="text-xs font-mono">Cargando productos desde base de datos...</span>
+                <span className="text-xs font-mono">Cargando menú...</span>
               </div>
             ) : productosFiltrados.length === 0 ? (
               <div className="py-16 text-center text-[#8E9297] text-sm">
-                No hay productos en esta categoría. Puedes agregarlos desde el Catálogo Admin.
+                No hay productos en esta categoría.
               </div>
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4.5">
                 {productosFiltrados.map(prod => (
                   <div
                     key={prod.id}
-                    className="p-4 rounded-2xl bg-[#14171E] border border-[#1F2833] flex flex-col justify-between gap-3 shadow-lg hover:border-[#C5A059]/40 transition-all"
+                    className="p-3.5 rounded-2xl bg-[#14171E] border border-[#1F2833] flex flex-col justify-between gap-3 shadow-lg hover:border-[#C5A059]/40 transition-all overflow-hidden"
                   >
-                    <div className="h-28 w-full rounded-xl bg-gradient-to-br from-[#1F2833]/80 to-[#0B0C10] border border-[#1F2833] flex items-center justify-center text-4xl shadow-inner">
-                      <span>{prod.emoji || "🍺"}</span>
+                    {/* Foto o Emoji si no hay URL */}
+                    <div className="h-32 w-full rounded-xl bg-gradient-to-br from-[#1F2833] to-[#0B0C10] border border-[#1F2833] overflow-hidden flex items-center justify-center relative">
+                      {prod.imagen_url ? (
+                        <img
+                          src={prod.imagen_url}
+                          alt={prod.nombre}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                          onError={(e) => { e.target.style.display = 'none'; }}
+                        />
+                      ) : (
+                        <span className="text-4xl">{prod.emoji || "🍺"}</span>
+                      )}
+                      <div className="absolute top-2 right-2 px-2 py-0.5 rounded-md bg-black/60 backdrop-blur-xs font-mono text-[10px] text-white">
+                        {prod.categoria}
+                      </div>
                     </div>
 
-                    <div className="space-y-1 text-center">
+                    <div className="space-y-0.5 text-center">
                       <h3 className="font-bold text-sm text-white line-clamp-1">{prod.nombre}</h3>
                       <p className="text-[11px] text-[#8E9297] line-clamp-1">{prod.descripcion || prod.categoria}</p>
                       <div className="font-['JetBrains_Mono'] font-extrabold text-base text-[#C5A059] pt-1">
@@ -340,7 +378,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         </div>
       </section>
 
-      {/* 3. TICKET / COMANDA */}
+      {/* COMANDA / TICKET */}
       <aside className="w-[420px] bg-[#14171E] flex flex-col h-full shrink-0 border-l border-[#1F2833]">
         <div className="p-6 border-b border-[#1F2833] space-y-4 shrink-0 bg-[#1F2833]/20">
           <div className="flex items-center justify-between">
@@ -349,7 +387,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 Comanda en Curso
               </h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="font-['JetBrains_Mono'] text-xs font-bold text-[#C5A059]">Mesa {mesaSeleccionada}</span>
+                <span className="font-mono text-xs font-bold text-[#C5A059]">Mesa {mesaSeleccionada}</span>
                 <span className="text-[#8E9297] text-xs">• Barra Principal</span>
               </div>
             </div>
@@ -357,7 +395,6 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             {ticketItems.length > 0 && (
               <button
                 onClick={limpiarTicket}
-                aria-label="Vaciar comanda"
                 className="p-2.5 rounded-xl bg-red-950/20 active:bg-red-900/40 border border-red-900/40 text-red-400 transition active:scale-95 cursor-pointer"
               >
                 <Trash2 size={16} />
@@ -408,7 +445,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               >
                 <div className="flex-1 mr-2 min-w-0">
                   <div className="font-bold text-xs text-white truncate">{item.nombre}</div>
-                  <div className="text-[11px] font-['JetBrains_Mono'] text-[#8E9297] mt-0.5">
+                  <div className="text-[11px] font-mono text-[#8E9297] mt-0.5">
                     ${item.precio.toFixed(2)} c/u
                   </div>
                 </div>
@@ -420,7 +457,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                   >
                     <Minus size={12} />
                   </button>
-                  <span className="w-6 text-center font-['JetBrains_Mono'] font-bold text-xs text-white">
+                  <span className="w-6 text-center font-mono font-bold text-xs text-white">
                     {item.cantidad}
                   </span>
                   <button
@@ -431,7 +468,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                   </button>
                 </div>
 
-                <div className="w-20 text-right font-['JetBrains_Mono'] font-extrabold text-sm text-[#C5A059]">
+                <div className="w-20 text-right font-mono font-extrabold text-sm text-[#C5A059]">
                   ${(item.precio * item.cantidad).toFixed(2)}
                 </div>
               </div>
@@ -467,7 +504,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           {cobroExitoso && (
             <div className="flex items-center justify-center gap-2 p-2.5 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-emerald-400 font-bold text-xs animate-pulse">
               <CheckCircle2 size={16} />
-              <span>¡Comanda guardada en SQLite!</span>
+              <span>¡Comanda guardada con éxito!</span>
             </div>
           )}
 
@@ -492,6 +529,45 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           </div>
         </div>
       </aside>
+
+      {/* MODAL INICIO DE TURNO (FONDO INICIAL DE CAJA) */}
+      {modalFondo && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
+            <div className="text-center space-y-1">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-[#C5A059]/20 border border-[#C5A059]/40 flex items-center justify-center text-[#C5A059]">
+                <DollarSign size={24} />
+              </div>
+              <h3 className="font-['Syne'] font-extrabold text-xl text-white pt-2">Apertura de Turno</h3>
+              <p className="text-xs text-[#8E9297]">
+                Ingresa el fondo inicial de efectivo en caja para comenzar
+              </p>
+            </div>
+
+            <form onSubmit={iniciarTurnoConFondo} className="space-y-4">
+              <div>
+                <label className="text-[11px] font-mono uppercase text-[#8E9297] block mb-1">Monto en Efectivo ($)</label>
+                <input
+                  type="number"
+                  step="50"
+                  required
+                  value={fondoInput}
+                  onChange={e => setFondoInput(e.target.value)}
+                  className="w-full bg-[#0B0C10] border border-[#1F2833] rounded-xl p-3 text-white text-lg font-mono font-bold text-center outline-none focus:border-[#C5A059]"
+                />
+              </div>
+
+              <button
+                type="submit"
+                className="w-full h-12 bg-[#C5A059] active:bg-[#D4AF37] text-[#0B0C10] font-black text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer active:scale-95"
+              >
+                Abrir Turno y Empezar
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }
