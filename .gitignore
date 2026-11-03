@@ -23,6 +23,10 @@ backend/data/*.sqlite
 *.db-wal
 *.db-shm
 
+# Archivos multimedia subidos (conservar la carpeta con .gitkeep pero ignorar fotos subidas)
+backend/uploads/*
+!backend/uploads/.gitkeep
+
 # IDEs y editores
 .vscode/
 .idea/
@@ -37,4 +41,3 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
-
