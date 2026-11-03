@@ -9,13 +9,16 @@
   - `productos`: `id`, `nombre`, `precio`, `categoria`, `color_boton`, `descripcion`, `emoji`, `imagen_url`.
   - `tickets`: `id`, `turno_id`, `total`, `fecha_hora`, `metodo_pago`, `cajero_id`.
   - `partidas`: `id`, `ticket_id`, `producto_id`, `cantidad`, `subtotal`.
-- **Carga y Almacenamiento Local de Fotografías:**
-  - Endpoint `POST /catalogo/upload-foto` en FastAPI con recepción multipart/form-data.
-  - Almacenamiento persistente en `./backend/uploads/` servido estáticamente en `/uploads/{nombre}`.
-  - Selector en Admin para subir fotos directamente desde el almacenamiento local o pegar enlaces URL.
+- **Lógica Completa de Cobro, Denominaciones y Cambio:**
+  - Al pulsar "Cobro en Efectivo / Cambio" o "Cobrar con Tarjeta", se despliega la pantalla modal de cobro.
+  - El cajero introduce el monto recibido o usa los botones táctiles de billetes rápidos (`$50`, `$100`, `$200`, `$500`, `$1000` o `Exacto`).
+  - El sistema calcula el **cambio a entregar** en tiempo real con validación visual (color verde si cubre el total, rojo si falta dinero).
+  - Al confirmar la venta, se genera y muestra el **Ticket Previo / Comprobante Térmico** con cabecera de negocio, mesa, cajero, desglose de partidas, total, efectivo entregado y cambio devuelto.
 
 ## Hitos Completados
-- [x] Soporte completo de carga de archivos de imagen locales (PNG, JPG, WEBP).
-- [x] Previsualización inmediata de imagen y botón para quitar foto en el modal de productos.
-- [x] Servidor FastAPI configurado con `app.mount("/uploads", StaticFiles)`.
-- [x] Commits y push a `origin main` completados (`632ba80`).
+- [x] Modal interactivo de cobro en efectivo y tarjeta.
+- [x] Selector táctil de billetes rápidos y cálculo de cambio al cliente.
+- [x] Teclado numérico táctil en pantalla integrado en el modal de cobro (1-9, C, 0, ⌫).
+- [x] Cotejo de pago con tarjeta requiriendo los últimos 4 dígitos y campo opcional de autorización/voucher.
+- [x] Vista previa estilizada de ticket físico térmico tras completar la venta con desglose de tarjeta (•••• 1234) o desglose de efectivo y cambio devuelto.
+- [x] Commit y push a GitHub.

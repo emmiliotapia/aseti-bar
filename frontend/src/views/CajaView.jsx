@@ -56,6 +56,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [modalCobro, setModalCobro] = useState(false);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState('efectivo'); // 'efectivo' | 'tarjeta'
   const [montoRecibido, setMontoRecibido] = useState('');
+  const [ultimosDigitosTarjeta, setUltimosDigitosTarjeta] = useState(''); // Cotejo de tarjeta
+  const [numAutorizacion, setNumAutorizacion] = useState(''); // Número de voucher / autorización opcional
   const [ticketFinalizado, setTicketFinalizado] = useState(null); // Para mostrar vista previa o imprimir ticket tras cobro
 
   const esAdmin = usuario?.rol === 'admin';
@@ -139,9 +141,37 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const abrirCobroModal = (metodo) => {
     if (ticketItems.length === 0) return;
     setMetodoSeleccionado(metodo);
-    // Para efectivo, sugerir el monto exacto
     setMontoRecibido(total.toString());
+    setUltimosDigitosTarjeta('');
+    setNumAutorizacion('');
     setModalCobro(true);
+  };
+
+  const handleCobroTecladoDigit = (d) => {
+    if (metodoSeleccionado === 'efectivo') {
+      if (d === '.' && montoRecibido.includes('.')) return;
+      setMontoRecibido(prev => (prev === '0' || prev === total.toString() ? d : prev + d));
+    } else {
+      if (ultimosDigitosTarjeta.length < 4) {
+        setUltimosDigitosTarjeta(prev => prev + d);
+      }
+    }
+  };
+
+  const handleCobroTecladoBackspace = () => {
+    if (metodoSeleccionado === 'efectivo') {
+      setMontoRecibido(prev => prev.slice(0, -1) || '0');
+    } else {
+      setUltimosDigitosTarjeta(prev => prev.slice(0, -1));
+    }
+  };
+
+  const handleCobroTecladoClear = () => {
+    if (metodoSeleccionado === 'efectivo') {
+      setMontoRecibido('0');
+    } else {
+      setUltimosDigitosTarjeta('');
+    }
   };
 
   const procesarVentaFinal = async () => {
@@ -180,7 +210,9 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         cajero: usuario?.nombre || "Cajero",
         fecha: new Date().toLocaleTimeString(),
         mesa: mesaSeleccionada,
-        nota: notaOrden
+        nota: notaOrden,
+        tarjeta_digitos: metodoSeleccionado === 'tarjeta' ? ultimosDigitosTarjeta : null,
+        autorizacion: metodoSeleccionado === 'tarjeta' ? numAutorizacion : null
       });
 
       setModalCobro(false);
@@ -749,6 +781,86 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               </div>
             )}
 
+            {/* Campo y Cotejo para Pago con Tarjeta */}
+            {metodoSeleccionado === 'tarjeta' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-mono uppercase text-[#8E9297] block mb-1">
+                    Cotejo de Tarjeta (Últimos 4 dígitos del plástico o voucher)
+                  </label>
+                  <div className="flex items-center justify-center gap-3 bg-[#0B0C10] border-2 border-[#1F2833] rounded-2xl p-3.5">
+                    <span className="text-xl font-mono text-[#8E9297] tracking-widest">•••• •••• ••••</span>
+                    <input
+                      type="text"
+                      maxLength={4}
+                      readOnly
+                      value={ultimosDigitosTarjeta}
+                      placeholder="XXXX"
+                      className="w-24 bg-transparent font-['JetBrains_Mono'] font-black text-2xl text-[#C5A059] tracking-widest text-center outline-none"
+                    />
+                  </div>
+                  {ultimosDigitosTarjeta.length < 4 && (
+                    <p className="text-[11px] text-amber-400/80 font-mono text-center mt-1.5">
+                      Ingresa los 4 dígitos para autorizar el cobro
+                    </p>
+                  )}
+                </div>
+
+                <div>
+                  <label className="text-xs font-mono uppercase text-[#8E9297] block mb-1">
+                    Nº Autorización / Voucher (Opcional)
+                  </label>
+                  <input
+                    type="text"
+                    value={numAutorizacion}
+                    onChange={e => setNumAutorizacion(e.target.value)}
+                    placeholder="Ej. AUT-89410"
+                    className="w-full bg-[#0B0C10] border border-[#1F2833] focus:border-[#C5A059] rounded-xl p-2.5 text-sm font-mono text-white text-center outline-none"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* TECLADO NUMÉRICO TÁCTIL EN PANTALLA */}
+            <div className="bg-[#0B0C10] p-3 rounded-2xl border border-[#1F2833] space-y-2">
+              <div className="text-[10px] font-mono uppercase text-[#8E9297] text-center tracking-widest font-bold">
+                {metodoSeleccionado === 'efectivo' ? 'Teclado de Efectivo' : 'Teclado para Cotejo de Tarjeta'}
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(d => (
+                  <button
+                    key={d}
+                    type="button"
+                    onClick={() => handleCobroTecladoDigit(d)}
+                    className="h-12 rounded-xl bg-[#1F2833] hover:bg-[#2C3540] active:scale-95 text-white font-mono font-black text-lg transition border border-[#2C3540]/60 flex items-center justify-center cursor-pointer"
+                  >
+                    {d}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={handleCobroTecladoClear}
+                  className="h-12 rounded-xl bg-red-950/30 hover:bg-red-900/40 text-red-400 font-mono font-bold text-xs uppercase tracking-wider transition border border-red-900/40 flex items-center justify-center cursor-pointer active:scale-95"
+                >
+                  C
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCobroTecladoDigit('0')}
+                  className="h-12 rounded-xl bg-[#1F2833] hover:bg-[#2C3540] active:scale-95 text-white font-mono font-black text-lg transition border border-[#2C3540]/60 flex items-center justify-center cursor-pointer"
+                >
+                  0
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCobroTecladoBackspace}
+                  className="h-12 rounded-xl bg-[#1F2833] hover:bg-[#2C3540] text-[#C5A059] font-mono font-bold text-xs uppercase tracking-wider transition border border-[#2C3540]/60 flex items-center justify-center cursor-pointer active:scale-95"
+                >
+                  ⌫
+                </button>
+              </div>
+            </div>
+
             {/* Confirmar Cobro */}
             <div className="flex gap-3 pt-2">
               <button
@@ -761,7 +873,11 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
               <button
                 type="button"
-                disabled={cobrando || (metodoSeleccionado === 'efectivo' && (parseFloat(montoRecibido) || 0) < total)}
+                disabled={
+                  cobrando ||
+                  (metodoSeleccionado === 'efectivo' && (parseFloat(montoRecibido) || 0) < total) ||
+                  (metodoSeleccionado === 'tarjeta' && ultimosDigitosTarjeta.length < 4)
+                }
                 onClick={procesarVentaFinal}
                 className="flex-2 h-13 rounded-2xl bg-gradient-to-r from-[#C5A059] to-[#D4AF37] active:from-[#9E7D3B] active:to-[#C5A059] disabled:opacity-30 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm uppercase tracking-wider shadow-[0_6px_22px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
               >
@@ -811,6 +927,18 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 <span>Método de pago:</span>
                 <span className="uppercase font-bold">{ticketFinalizado.metodo}</span>
               </div>
+              {ticketFinalizado.metodo === 'tarjeta' && ticketFinalizado.tarjeta_digitos && (
+                <div className="flex justify-between text-gray-700">
+                  <span>Tarjeta:</span>
+                  <span className="font-bold tracking-widest">•••• {ticketFinalizado.tarjeta_digitos}</span>
+                </div>
+              )}
+              {ticketFinalizado.metodo === 'tarjeta' && ticketFinalizado.autorizacion && (
+                <div className="flex justify-between text-gray-700">
+                  <span>Autorización:</span>
+                  <span className="font-bold">{ticketFinalizado.autorizacion}</span>
+                </div>
+              )}
               {ticketFinalizado.metodo === 'efectivo' && (
                 <>
                   <div className="flex justify-between text-gray-700">
