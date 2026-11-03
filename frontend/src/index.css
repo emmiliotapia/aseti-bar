@@ -1,0 +1,32 @@
+@import "tailwindcss";
+
+@theme {
+  --color-obsidian-main: #0B0C10;
+  --color-obsidian-card: #14171E;
+  --color-obsidian-panel: #1F2833;
+  --color-obsidian-border: #2C3540;
+
+  --color-gold-base: #C5A059;
+  --color-gold-light: #D4AF37;
+  --color-gold-dark: #9E7D3B;
+
+  --font-display: 'Syne', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+}
+
+:root {
+  --bg-main: #0B0C10;
+  --bg-panel: #1F2833;
+  --color-gold: #C5A059;
+}
+
+body {
+  background-color: #0B0C10;
+  color: #C5C6C7;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+  overflow: hidden;
+}
