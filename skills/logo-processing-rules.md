@@ -91,3 +91,4 @@ En los componentes de UI (`CajaView.jsx`, `LoginPinView.jsx`, `AdminView.jsx`):
 - **Nunca** revertir a incrustar imágenes locales dentro de etiquetas `<image>` de SVG.
 - **Mantener** el formato apaisado horizontal para optimizar el espacio vertical en los sidebars y la cabecera del login táctil.
 - **Preservar** la sincronización entre el archivo maestro en la raíz y la carpeta `frontend/public/`.
+
