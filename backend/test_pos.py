@@ -132,3 +132,13 @@ def test_cuentas_abiertas_flujo():
     res_check = client.get("/cuentas/mesa/Mesa%204")
     assert res_check.status_code == 200
     assert res_check.json() is None
+
+def test_verificar_pin_admin_auditoria():
+    # PIN admin válido (9999)
+    res_ok = client.post("/auth/verificar-pin-admin", json={"pin": "9999"})
+    assert res_ok.status_code == 200
+    assert res_ok.json()["autorizado"] is True
+
+    # PIN inválido o de cajero regular (1234)
+    res_fail = client.post("/auth/verificar-pin-admin", json={"pin": "1234"})
+    assert res_fail.status_code == 401

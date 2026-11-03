@@ -14,6 +14,18 @@ export const api = {
     }
     return res.json();
   },
+  verificarPinAdmin: async (pin) => {
+    const res = await fetch(`${API_BASE}/auth/verificar-pin-admin`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ pin }),
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'PIN de Administrador no válido');
+    }
+    return res.json();
+  },
 
   // Asistencia (Control exclusivo por Admin)
   autorizarAsistencia: async (usuario_id, autorizar, autorizado_por = "Admin") => {

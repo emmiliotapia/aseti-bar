@@ -27,6 +27,9 @@
   - Indicador visual e interactivo de mesas ocupadas con cuenta abierta y saldo actual en tiempo real.
   - Modal y botón "Cuentas Abiertas" en barra de navegación para consultar, reanudar y cobrar comandas.
   - Cierre automático de cuenta abierta al momento de cobrar e imprimir el ticket.
+- [x] **Aislamiento de Comandas por Mesa y Auditoría Estricta:**
+  - Al cambiar de mesa, la comanda en pantalla se limpia automáticamente y solo recupera la comanda específica de la nueva mesa seleccionada (si tiene cuenta abierta).
+  - Nadie (cajero o mesero) puede borrar la comanda ni eliminar partidas completas sin ingresar el **NIP de Administrador** para auditar cancelaciones.
 - [x] Vista previa estilizada de ticket físico térmico tras completar la venta con desglose de mesa, mesero, cajero, tarjeta o efectivo y cambio.
-- [x] Suite de pruebas automatizadas en backend con Pytest (`test_pos.py`).
+- [x] Suite de pruebas automatizadas en backend con Pytest (`test_pos.py`, 8 pruebas pasando).
 - [x] Commit y push a GitHub.

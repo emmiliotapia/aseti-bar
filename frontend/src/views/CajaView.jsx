@@ -71,6 +71,12 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [numAutorizacion, setNumAutorizacion] = useState(''); // Número de voucher / autorización opcional
   const [ticketFinalizado, setTicketFinalizado] = useState(null); // Para mostrar vista previa o imprimir ticket tras cobro
 
+  // Modal de Autorización por NIP de Admin (para Cancelar/Borrar Comanda)
+  const [modalAuthAdmin, setModalAuthAdmin] = useState(false);
+  const [pinAdminInput, setPinAdminInput] = useState('');
+  const [accionPendienteAdmin, setAccionPendienteAdmin] = useState(null); // callback de borrado
+  const [errorAuthAdmin, setErrorAuthAdmin] = useState('');
+
   const esAdmin = usuario?.rol === 'admin';
 
   const cargarCatalogo = async () => {
@@ -142,10 +148,53 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   };
 
   const seleccionarMesaYRecuperar = (num) => {
+    // Al cambiar de mesa, se limpia la pantalla y se carga la cuenta propia de esa mesa (si la tiene)
     setMesaSeleccionada(num);
     setModalidad('mesa');
     setModalMesas(false);
+    setTicketItems([]);
+    setNotaOrden('');
+    setCuentaActivaId(null);
     cargarCuentaDeMesa(`Mesa ${num}`);
+  };
+
+  const solicitarAutorizacionAdminParaLimpiar = () => {
+    if (ticketItems.length === 0) return;
+    
+    // Si el usuario actual ya es Admin, se limpia directamente
+    if (esAdmin) {
+      if (window.confirm("¿Confirmas limpiar toda la comanda actual?")) {
+        setTicketItems([]);
+        setNotaOrden('');
+        setCuentaActivaId(null);
+      }
+      return;
+    }
+
+    // Si es cajero o mesero, se exige NIP de Admin para auditar
+    setPinAdminInput('');
+    setErrorAuthAdmin('');
+    setAccionPendienteAdmin(() => () => {
+      setTicketItems([]);
+      setNotaOrden('');
+      setCuentaActivaId(null);
+    });
+    setModalAuthAdmin(true);
+  };
+
+  const ejecutarVerificacionAdmin = async () => {
+    try {
+      await api.verificarPinAdmin(pinAdminInput);
+      if (accionPendienteAdmin) {
+        accionPendienteAdmin();
+      }
+      setModalAuthAdmin(false);
+      setPinAdminInput('');
+      setAccionPendienteAdmin(null);
+    } catch (err) {
+      setErrorAuthAdmin(err.message || "PIN no autorizado");
+      setPinAdminInput('');
+    }
   };
 
   const guardarComandaEnCuenta = async () => {
@@ -223,6 +272,23 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   };
 
   const modificarCantidad = (id, delta) => {
+    // Si la cantidad llega a 0 (eliminación de producto de la comanda), se requiere auditar si no es admin
+    const itemActual = ticketItems.find(it => it.id === id);
+    if (itemActual && itemActual.cantidad + delta <= 0) {
+      if (esAdmin) {
+        setTicketItems(prev => prev.filter(it => it.id !== id));
+        return;
+      }
+      // Solicitar NIP de Administrador para auditar borrado de artículo
+      setPinAdminInput('');
+      setErrorAuthAdmin('');
+      setAccionPendienteAdmin(() => () => {
+        setTicketItems(prev => prev.filter(it => it.id !== id));
+      });
+      setModalAuthAdmin(true);
+      return;
+    }
+
     setTicketItems(prev =>
       prev
         .map(item => (item.id === id ? { ...item, cantidad: item.cantidad + delta } : item))
@@ -597,10 +663,13 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
             {ticketItems.length > 0 && (
               <button
-                onClick={limpiarTicket}
-                className="p-2.5 rounded-xl bg-red-950/30 active:bg-red-900/40 border border-red-900/40 text-red-300 transition active:scale-95 cursor-pointer"
+                type="button"
+                onClick={solicitarAutorizacionAdminParaLimpiar}
+                className="p-2.5 rounded-xl bg-red-950/30 active:bg-red-900/40 border border-red-900/40 text-red-300 transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                title="Auditoría requerida para cancelar o limpiar comanda"
               >
                 <Trash2 size={16} />
+                <span className="text-[10px] font-mono uppercase font-bold text-red-400">Auditar</span>
               </button>
             )}
           </div>
@@ -1360,6 +1429,115 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 ))}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: AUTORIZACIÓN POR NIP DE ADMINISTRADOR (AUDITORÍA)
+          ======================================================== */}
+      {modalAuthAdmin && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm bg-[#142430] border-2 border-red-500/60 rounded-3xl p-6 space-y-4 shadow-2xl relative">
+            <button
+              onClick={() => {
+                setModalAuthAdmin(false);
+                setPinAdminInput('');
+                setAccionPendienteAdmin(null);
+              }}
+              className="absolute top-4 right-4 text-[#93A8AC] hover:text-white"
+            >
+              ✕
+            </button>
+
+            <div className="text-center space-y-1">
+              <div className="w-12 h-12 mx-auto rounded-2xl bg-red-950/40 border border-red-500/60 flex items-center justify-center text-red-400">
+                <Shield size={24} />
+              </div>
+              <h3 className="font-['Syne'] font-extrabold text-xl text-white pt-1">
+                Auditoría Requerida
+              </h3>
+              <p className="text-xs text-[#93A8AC]">
+                Ingresa el <span className="text-[#E9C46A] font-bold">NIP de Administrador</span> para autorizar la cancelación o borrado en la comanda
+              </p>
+            </div>
+
+            {/* Input PIN Display */}
+            <div className="flex items-center justify-center gap-3 py-2">
+              {[0, 1, 2, 3].map((idx) => (
+                <div
+                  key={idx}
+                  className={`w-4 h-4 rounded-full transition-all duration-150 ${
+                    pinAdminInput.length > idx
+                      ? "bg-red-400 scale-125 shadow-[0_0_12px_rgba(239,68,68,0.8)]"
+                      : "bg-[#1B3B4B] border border-[#264653]"
+                  }`}
+                />
+              ))}
+            </div>
+
+            {errorAuthAdmin && (
+              <div className="text-xs text-red-400 font-bold bg-red-950/40 border border-red-900/50 p-2 rounded-xl text-center">
+                {errorAuthAdmin}
+              </div>
+            )}
+
+            {/* Teclado Táctil */}
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9'].map(d => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => {
+                    if (pinAdminInput.length < 4) {
+                      const nextPin = pinAdminInput + d;
+                      setPinAdminInput(nextPin);
+                      setErrorAuthAdmin('');
+                    }
+                  }}
+                  className="h-12 rounded-xl bg-[#0C1821] hover:bg-[#1B3B4B] active:bg-red-950/40 text-white font-mono font-bold text-lg border border-[#264653] flex items-center justify-center cursor-pointer active:scale-95 transition"
+                >
+                  {d}
+                </button>
+              ))}
+              <button
+                type="button"
+                onClick={() => setPinAdminInput('')}
+                className="h-12 rounded-xl bg-[#1B3B4B] hover:bg-[#264653] text-[#93A8AC] font-mono font-bold text-xs uppercase flex items-center justify-center cursor-pointer active:scale-95"
+              >
+                C
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  if (pinAdminInput.length < 4) {
+                    setPinAdminInput(prev => prev + '0');
+                    setErrorAuthAdmin('');
+                  }
+                }}
+                className="h-12 rounded-xl bg-[#0C1821] hover:bg-[#1B3B4B] text-white font-mono font-bold text-lg border border-[#264653] flex items-center justify-center cursor-pointer active:scale-95 transition"
+              >
+                0
+              </button>
+              <button
+                type="button"
+                onClick={() => setPinAdminInput(prev => prev.slice(0, -1))}
+                className="h-12 rounded-xl bg-[#1B3B4B] hover:bg-[#264653] text-[#E76F51] font-mono font-bold text-xs flex items-center justify-center cursor-pointer active:scale-95"
+              >
+                ⌫
+              </button>
+            </div>
+
+            <div className="pt-2">
+              <button
+                type="button"
+                disabled={pinAdminInput.length !== 4}
+                onClick={ejecutarVerificacionAdmin}
+                className="w-full h-12 bg-red-600 active:bg-red-700 disabled:opacity-30 disabled:cursor-not-allowed text-white font-black text-xs uppercase tracking-wider rounded-xl shadow-lg transition active:scale-95 cursor-pointer"
+              >
+                Autorizar Borrado
+              </button>
+            </div>
           </div>
         </div>
       )}

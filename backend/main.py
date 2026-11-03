@@ -98,6 +98,25 @@ def login_por_usuario_y_pin(req: schemas.LoginRequest, db: Session = Depends(get
 
     return usuario
 
+@app.post("/auth/verificar-pin-admin", tags=["Autenticación"])
+def verificar_pin_admin(datos: dict, db: Session = Depends(get_db)):
+    """Verifica si el PIN proporcionado pertenece a un usuario con rol de Administrador para autorizar cancelaciones/borrados."""
+    pin = datos.get("pin", "")
+    admin = db.query(models.Usuario).filter(
+        models.Usuario.rol == "admin",
+        models.Usuario.pin == pin
+    ).first()
+
+    if not admin:
+        raise HTTPException(status_code=401, detail="PIN de Administrador inválido o no autorizado")
+
+    return {
+        "status": "ok",
+        "autorizado": True,
+        "admin_nombre": admin.nombre,
+        "mensaje": f"Acción autorizada por {admin.nombre}"
+    }
+
 
 # ========================================================
 # 2. CONTROL DE ASISTENCIA POR EL ADMINISTRADOR
