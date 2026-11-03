@@ -24,7 +24,9 @@ import {
   Grid,
   Loader2,
   DollarSign,
-  UserCheck
+  UserCheck,
+  Save,
+  FolderOpen
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -47,6 +49,10 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [usuariosPersonal, setUsuariosPersonal] = useState([]);
   const [modalMesas, setModalMesas] = useState(false);
   const [modalMeseros, setModalMeseros] = useState(false);
+  const [modalCuentasAbiertas, setModalCuentasAbiertas] = useState(false);
+  const [cuentasAbiertas, setCuentasAbiertas] = useState([]);
+  const [cuentaActivaId, setCuentaActivaId] = useState(null);
+  const [guardandoCuenta, setGuardandoCuenta] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [cobrando, setCobrando] = useState(false);
   const [cobroExitoso, setCobroExitoso] = useState(false);
@@ -97,10 +103,98 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
     }
   };
 
+  const cargarCuentasAbiertas = async () => {
+    try {
+      const data = await api.getCuentasAbiertas();
+      setCuentasAbiertas(data || []);
+    } catch (err) {
+      console.error("Error al cargar cuentas abiertas", err);
+    }
+  };
+
   useEffect(() => {
     cargarCatalogo();
     verificarTurno();
+    cargarCuentasAbiertas();
   }, []);
+
+  const nombreMesaActual = modalidad === 'barra' ? 'Barra' : (modalidad === 'llevar' ? 'Para Llevar' : `Mesa ${mesaSeleccionada}`);
+
+  const cargarCuentaDeMesa = async (mesaNombre) => {
+    try {
+      const cuenta = await api.getCuentaPorMesa(mesaNombre);
+      if (cuenta && cuenta.partidas && cuenta.partidas.length > 0) {
+        setCuentaActivaId(cuenta.id);
+        setMeseroSeleccionado(cuenta.mesero);
+        setNotaOrden(cuenta.nota || '');
+        setTicketItems(cuenta.partidas.map(p => ({
+          id: p.producto_id,
+          nombre: p.nombre,
+          precio: p.precio,
+          cantidad: p.cantidad
+        })));
+      } else {
+        setCuentaActivaId(null);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const seleccionarMesaYRecuperar = (num) => {
+    setMesaSeleccionada(num);
+    setModalidad('mesa');
+    setModalMesas(false);
+    cargarCuentaDeMesa(`Mesa ${num}`);
+  };
+
+  const guardarComandaEnCuenta = async () => {
+    if (ticketItems.length === 0) return;
+    setGuardandoCuenta(true);
+    try {
+      const payload = {
+        mesa: nombreMesaActual,
+        mesero: meseroSeleccionado || usuario?.nombre || "General",
+        cajero: usuario?.nombre || "Cajero",
+        nota: notaOrden,
+        partidas: ticketItems.map(item => ({
+          producto_id: item.id,
+          cantidad: item.cantidad,
+          subtotal: item.precio * item.cantidad
+        }))
+      };
+      await api.guardarCuenta(payload);
+      await cargarCuentasAbiertas();
+      setCobroExitoso(true);
+      setTimeout(() => setCobroExitoso(false), 2500);
+    } catch (err) {
+      alert("Error al guardar cuenta abierta: " + err.message);
+    } finally {
+      setGuardandoCuenta(false);
+    }
+  };
+
+  const abrirCuentaDesdeModal = (c) => {
+    setCuentaActivaId(c.id);
+    if (c.mesa.startsWith('Mesa ')) {
+      const n = parseInt(c.mesa.replace('Mesa ', '')) || 1;
+      setMesaSeleccionada(n);
+      setModalidad('mesa');
+    } else if (c.mesa === 'Barra') {
+      setModalidad('barra');
+    } else {
+      setModalidad('llevar');
+    }
+    setMeseroSeleccionado(c.mesero);
+    setNotaOrden(c.nota || '');
+    setTicketItems(c.partidas.map(p => ({
+      id: p.producto_id,
+      nombre: p.nombre,
+      precio: p.precio,
+      cantidad: p.cantidad
+    })));
+    setModalCuentasAbiertas(false);
+  };
 
   const iniciarTurnoConFondo = async (e) => {
     e.preventDefault();
@@ -198,6 +292,9 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         metodo_pago: metodoSeleccionado,
         cajero_id: meseroSeleccionado || usuario?.nombre || "Cajero",
         turno_id: turnoActivo?.id || null,
+        mesa: nombreMesaActual,
+        mesero: meseroSeleccionado || usuario?.nombre || "General",
+        cuenta_id: cuentaActivaId,
         partidas: ticketItems.map(item => ({
           producto_id: item.id,
           cantidad: item.cantidad,
@@ -206,6 +303,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
       };
 
       const resTicket = await api.registrarTicket(payload);
+      await cargarCuentasAbiertas();
       
       const cambioCalculado = metodoSeleccionado === 'efectivo' ? Math.max(0, pagado - total) : 0;
       
@@ -220,7 +318,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         mesero: meseroSeleccionado,
         modalidad,
         fecha: new Date().toLocaleTimeString(),
-        mesa: modalidad === 'barra' ? 'Barra' : (modalidad === 'llevar' ? 'Para Llevar' : `Mesa ${mesaSeleccionada}`),
+        mesa: nombreMesaActual,
         nota: notaOrden,
         tarjeta_digitos: metodoSeleccionado === 'tarjeta' ? ultimosDigitosTarjeta : null,
         autorizacion: metodoSeleccionado === 'tarjeta' ? numAutorizacion : null
@@ -228,6 +326,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
       setModalCobro(false);
       setTicketItems([]);
+      setCuentaActivaId(null);
       setNotaOrden('');
       setCobrando(false);
     } catch (err) {
@@ -262,6 +361,25 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             >
               <LayoutDashboard size={18} />
               <span>Punto de Venta</span>
+            </button>
+
+            {/* Acceso Directo a Cuentas Abiertas */}
+            <button
+              onClick={() => {
+                cargarCuentasAbiertas();
+                setModalCuentasAbiertas(true);
+              }}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#14171E] hover:bg-[#1F2833] text-white border border-[#1F2833] hover:border-[#C5A059]/40 transition active:scale-95 cursor-pointer"
+            >
+              <div className="flex items-center gap-3.5">
+                <FolderOpen size={18} className="text-[#C5A059]" />
+                <span>Cuentas Abiertas</span>
+              </div>
+              {cuentasAbiertas.length > 0 && (
+                <span className="w-5 h-5 rounded-full bg-[#C5A059] text-[#0B0C10] text-[10px] font-black flex items-center justify-center font-mono">
+                  {cuentasAbiertas.length}
+                </span>
+              )}
             </button>
 
             {esAdmin && (
@@ -624,15 +742,25 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           {cobroExitoso && (
             <div className="flex items-center justify-center gap-2 p-2.5 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-emerald-400 font-bold text-xs animate-pulse">
               <CheckCircle2 size={16} />
-              <span>¡Comanda guardada con éxito!</span>
+              <span>¡Comanda guardada en cuenta con éxito!</span>
             </div>
           )}
 
-          <div className="space-y-2.5 pt-1">
+          <div className="space-y-2 pt-1">
+            {/* Guardar Comanda en Cuenta Abierta */}
+            <button
+              onClick={guardarComandaEnCuenta}
+              disabled={ticketItems.length === 0 || guardandoCuenta || cobrando}
+              className="w-full h-11 flex items-center justify-center gap-2 bg-[#0B0C10] hover:bg-[#1F2833] active:bg-[#2C3540] disabled:opacity-30 disabled:cursor-not-allowed border border-[#C5A059]/40 rounded-xl text-[#C5A059] font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
+            >
+              <Save size={16} />
+              <span>{guardandoCuenta ? "Guardando..." : "Guardar en Cuenta Abierta"}</span>
+            </button>
+
             <button
               onClick={() => abrirCobroModal("tarjeta")}
               disabled={ticketItems.length === 0 || cobrando}
-              className="w-full h-13 flex items-center justify-center gap-2 bg-[#1F2833] active:bg-[#2C3540] disabled:opacity-30 disabled:cursor-not-allowed border border-[#2C3540] rounded-xl text-white font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
+              className="w-full h-12 flex items-center justify-center gap-2 bg-[#1F2833] active:bg-[#2C3540] disabled:opacity-30 disabled:cursor-not-allowed border border-[#2C3540] rounded-xl text-white font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
             >
               <CreditCard size={17} className="text-[#C5A059]" />
               <span>Cobrar con Tarjeta</span>
@@ -641,7 +769,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             <button
               onClick={() => abrirCobroModal("efectivo")}
               disabled={ticketItems.length === 0 || cobrando}
-              className="w-full h-15 flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#C5A059] to-[#D4AF37] active:from-[#9E7D3B] active:to-[#C5A059] disabled:opacity-30 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_6px_22px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
+              className="w-full h-14 flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#C5A059] to-[#D4AF37] active:from-[#9E7D3B] active:to-[#C5A059] disabled:opacity-30 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_6px_22px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
             >
               <Banknote size={20} />
               <span>Cobro en Efectivo / Cambio</span>
@@ -1043,25 +1171,35 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
             {/* Matriz de Mesas (1 a 16 + Barra) */}
             <div className="grid grid-cols-4 gap-2.5 max-h-[360px] overflow-y-auto p-1">
-              {Array.from({ length: 16 }, (_, i) => i + 1).map(num => (
-                <button
-                  key={num}
-                  type="button"
-                  onClick={() => {
-                    setMesaSeleccionada(num);
-                    setModalidad('mesa');
-                    setModalMesas(false);
-                  }}
-                  className={`h-16 rounded-2xl flex flex-col items-center justify-center border font-mono transition cursor-pointer active:scale-95 ${
-                    modalidad === 'mesa' && mesaSeleccionada === num
-                      ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.35)]'
-                      : 'bg-[#0B0C10] border-[#1F2833] text-white hover:border-[#C5A059]/50'
-                  }`}
-                >
-                  <span className="text-[10px] uppercase text-opacity-80">Mesa</span>
-                  <span className="text-xl font-black">{num}</span>
-                </button>
-              ))}
+              {Array.from({ length: 16 }, (_, i) => i + 1).map(num => {
+                const cuentaMesa = cuentasAbiertas.find(ca => ca.mesa === `Mesa ${num}`);
+                const tieneCuenta = !!cuentaMesa;
+                return (
+                  <button
+                    key={num}
+                    type="button"
+                    onClick={() => seleccionarMesaYRecuperar(num)}
+                    className={`h-16 rounded-2xl flex flex-col items-center justify-center border font-mono transition cursor-pointer active:scale-95 relative ${
+                      modalidad === 'mesa' && mesaSeleccionada === num
+                        ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.35)]'
+                        : tieneCuenta
+                        ? 'bg-amber-950/20 border-amber-500/60 text-amber-300 hover:border-amber-400'
+                        : 'bg-[#0B0C10] border-[#1F2833] text-white hover:border-[#C5A059]/50'
+                    }`}
+                  >
+                    {tieneCuenta && (
+                      <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-amber-400 animate-ping" />
+                    )}
+                    <span className="text-[10px] uppercase text-opacity-80">Mesa</span>
+                    <span className="text-xl font-black">{num}</span>
+                    {tieneCuenta && (
+                      <span className="text-[9px] font-bold text-amber-300">
+                        ${cuentaMesa.total.toFixed(0)}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#1F2833]">
@@ -1150,6 +1288,74 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 </button>
               ))}
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: LISTADO GENERAL DE CUENTAS ABIERTAS
+          ======================================================== */}
+      {modalCuentasAbiertas && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-lg bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
+              <div>
+                <h3 className="font-['Syne'] font-extrabold text-xl text-white">
+                  Cuentas Abiertas en Servicio
+                </h3>
+                <p className="text-xs text-[#8E9297]">
+                  {cuentasAbiertas.length === 0 ? "No hay cuentas activas" : `${cuentasAbiertas.length} comanda(s) activas`}
+                </p>
+              </div>
+              <button
+                onClick={() => setModalCuentasAbiertas(false)}
+                className="w-8 h-8 rounded-full bg-[#1F2833] text-[#8E9297] hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {cuentasAbiertas.length === 0 ? (
+              <div className="text-center py-10 text-[#8E9297] space-y-2">
+                <FolderOpen size={36} className="mx-auto opacity-40 text-[#C5A059]" />
+                <p className="text-xs font-mono uppercase tracking-widest">
+                  No hay cuentas pendientes por cobrar
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-3 max-h-[380px] overflow-y-auto p-1">
+                {cuentasAbiertas.map(c => (
+                  <div
+                    key={c.id}
+                    onClick={() => abrirCuentaDesdeModal(c)}
+                    className="p-4 rounded-2xl bg-[#0B0C10] border border-[#1F2833] hover:border-[#C5A059] transition cursor-pointer active:scale-98 flex items-center justify-between group"
+                  >
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-['JetBrains_Mono'] font-extrabold text-white text-base">
+                          {c.mesa}
+                        </span>
+                        <span className="px-2 py-0.5 rounded-md bg-[#1F2833] text-[10px] font-mono text-[#C5A059] font-bold">
+                          {c.mesero}
+                        </span>
+                      </div>
+                      <div className="text-[11px] text-[#8E9297]">
+                        {c.partidas.length} artículos {c.nota ? `• "${c.nota}"` : ''}
+                      </div>
+                    </div>
+
+                    <div className="text-right space-y-1">
+                      <div className="font-['JetBrains_Mono'] text-lg font-black text-[#C5A059]">
+                        ${c.total.toFixed(2)}
+                      </div>
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-emerald-400 font-bold block">
+                        Cargar comanda →
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       )}

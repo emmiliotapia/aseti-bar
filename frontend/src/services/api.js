@@ -139,6 +139,29 @@ export const api = {
     return res.json();
   },
 
+  // Cuentas Abiertas (Por Mesa y Mesero)
+  getCuentasAbiertas: async () => {
+    const res = await fetch(`${API_BASE}/cuentas`);
+    return res.json();
+  },
+  getCuentaPorMesa: async (mesa) => {
+    const res = await fetch(`${API_BASE}/cuentas/mesa/${encodeURIComponent(mesa)}`);
+    return res.json();
+  },
+  guardarCuenta: async (data) => {
+    const res = await fetch(`${API_BASE}/cuentas/guardar`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+    if (!res.ok) throw new Error('Error al guardar comanda en cuenta');
+    return res.json();
+  },
+  cancelarCuenta: async (id) => {
+    const res = await fetch(`${API_BASE}/cuentas/${id}`, { method: 'DELETE' });
+    return res.json();
+  },
+
   // Configuración
   getConfig: async () => {
     const res = await fetch(`${API_BASE}/configuracion`);

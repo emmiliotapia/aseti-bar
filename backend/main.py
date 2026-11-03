@@ -314,7 +314,127 @@ def reporte_ventas_general(db: Session = Depends(get_db)):
 
 
 # ========================================================
-# 6. VENTAS
+# 6. CUENTAS ABIERTAS (COMANDA POR MESA Y MESERO)
+# ========================================================
+@app.get("/cuentas", response_model=List[schemas.CuentaDetalleResponse], tags=["Cuentas"])
+def listar_cuentas_abiertas(db: Session = Depends(get_db)):
+    cuentas = db.query(models.CuentaAbierta).filter(models.CuentaAbierta.estado == "abierta").order_by(models.CuentaAbierta.id.desc()).all()
+    resultado = []
+    for c in cuentas:
+        partidas_dto = []
+        total_cuenta = 0.0
+        for p in c.partidas:
+            prod_nombre = p.producto.nombre if p.producto else "Producto"
+            prod_precio = p.producto.precio if p.producto else (p.subtotal / p.cantidad if p.cantidad else 0.0)
+            partidas_dto.append({
+                "id": p.id,
+                "producto_id": p.producto_id,
+                "nombre": prod_nombre,
+                "precio": prod_precio,
+                "cantidad": p.cantidad,
+                "subtotal": p.subtotal
+            })
+            total_cuenta += p.subtotal
+        
+        resultado.append({
+            "id": c.id,
+            "mesa": c.mesa,
+            "mesero": c.mesero,
+            "cajero": c.cajero,
+            "fecha_apertura": c.fecha_apertura,
+            "nota": c.nota or "",
+            "estado": c.estado,
+            "total": total_cuenta,
+            "partidas": partidas_dto
+        })
+    return resultado
+
+@app.get("/cuentas/mesa/{mesa}", response_model=Optional[schemas.CuentaDetalleResponse], tags=["Cuentas"])
+def obtener_cuenta_por_mesa(mesa: str, db: Session = Depends(get_db)):
+    c = db.query(models.CuentaAbierta).filter(
+        models.CuentaAbierta.mesa == mesa,
+        models.CuentaAbierta.estado == "abierta"
+    ).first()
+    if not c:
+        return None
+    
+    partidas_dto = []
+    total_cuenta = 0.0
+    for p in c.partidas:
+        prod_nombre = p.producto.nombre if p.producto else "Producto"
+        prod_precio = p.producto.precio if p.producto else (p.subtotal / p.cantidad if p.cantidad else 0.0)
+        partidas_dto.append({
+            "id": p.id,
+            "producto_id": p.producto_id,
+            "nombre": prod_nombre,
+            "precio": prod_precio,
+            "cantidad": p.cantidad,
+            "subtotal": p.subtotal
+        })
+        total_cuenta += p.subtotal
+    
+    return {
+        "id": c.id,
+        "mesa": c.mesa,
+        "mesero": c.mesero,
+        "cajero": c.cajero,
+        "fecha_apertura": c.fecha_apertura,
+        "nota": c.nota or "",
+        "estado": c.estado,
+        "total": total_cuenta,
+        "partidas": partidas_dto
+    }
+
+@app.post("/cuentas/guardar", tags=["Cuentas"])
+def guardar_o_actualizar_cuenta(req: schemas.CuentaGuardarRequest, db: Session = Depends(get_db)):
+    """Abre una nueva cuenta para la mesa o actualiza la cuenta abierta existente."""
+    cuenta = db.query(models.CuentaAbierta).filter(
+        models.CuentaAbierta.mesa == req.mesa,
+        models.CuentaAbierta.estado == "abierta"
+    ).first()
+
+    if not cuenta:
+        cuenta = models.CuentaAbierta(
+            mesa=req.mesa,
+            mesero=req.mesero,
+            cajero=req.cajero,
+            nota=req.nota or "",
+            estado="abierta"
+        )
+        db.add(cuenta)
+        db.flush()
+    else:
+        cuenta.mesero = req.mesero
+        cuenta.cajero = req.cajero
+        cuenta.nota = req.nota or ""
+        # Reemplazar partidas anteriores con la orden actualizada
+        db.query(models.PartidaCuenta).filter(models.PartidaCuenta.cuenta_id == cuenta.id).delete()
+
+    for p in req.partidas:
+        nueva_partida = models.PartidaCuenta(
+            cuenta_id=cuenta.id,
+            producto_id=p.producto_id,
+            cantidad=p.cantidad or 1,
+            subtotal=p.subtotal
+        )
+        db.add(nueva_partida)
+
+    db.commit()
+    db.refresh(cuenta)
+    return {"status": "ok", "cuenta_id": cuenta.id, "mensaje": f"Cuenta de {cuenta.mesa} guardada con éxito"}
+
+@app.delete("/cuentas/{cuenta_id}", tags=["Cuentas"])
+def cancelar_cuenta(cuenta_id: int, db: Session = Depends(get_db)):
+    cuenta = db.query(models.CuentaAbierta).filter(models.CuentaAbierta.id == cuenta_id).first()
+    if not cuenta:
+        raise HTTPException(status_code=404, detail="Cuenta no encontrada")
+    db.delete(cuenta)
+    db.commit()
+    return {"message": "Cuenta cancelada exitosamente"}
+
+
+# ========================================================
+# 7. VENTAS (COBRO Y CIERRE DE CUENTA)
 # ========================================================
 @app.post("/ventas/ticket", response_model=schemas.TicketResponse, status_code=status.HTTP_201_CREATED, tags=["Ventas"])
 def registrar_ticket(ticket_data: schemas.TicketCreate, db: Session = Depends(get_db)):
@@ -325,7 +445,9 @@ def registrar_ticket(ticket_data: schemas.TicketCreate, db: Session = Depends(ge
         total=ticket_data.total,
         metodo_pago=ticket_data.metodo_pago,
         cajero_id=ticket_data.cajero_id,
-        turno_id=turno_id
+        turno_id=turno_id,
+        mesa=ticket_data.mesa or "Mesa 1",
+        mesero=ticket_data.mesero or "General"
     )
     db.add(nuevo_ticket)
     db.flush()
@@ -338,6 +460,19 @@ def registrar_ticket(ticket_data: schemas.TicketCreate, db: Session = Depends(ge
             subtotal=p.subtotal
         )
         db.add(partida)
+
+    # Si vino ligado a una cuenta abierta o existe una cuenta abierta para esta mesa, cerrarla
+    if ticket_data.cuenta_id:
+        cuenta = db.query(models.CuentaAbierta).filter(models.CuentaAbierta.id == ticket_data.cuenta_id).first()
+        if cuenta:
+            cuenta.estado = "cerrada"
+    elif ticket_data.mesa:
+        cuenta = db.query(models.CuentaAbierta).filter(
+            models.CuentaAbierta.mesa == ticket_data.mesa,
+            models.CuentaAbierta.estado == "abierta"
+        ).first()
+        if cuenta:
+            cuenta.estado = "cerrada"
 
     db.commit()
     db.refresh(nuevo_ticket)

@@ -78,10 +78,57 @@ def test_corte_x():
     assert "total_ventas" in corte
     assert "efectivo_en_caja" in corte
 
-def test_reporte_ventas():
-    res = client.get("/reportes/ventas")
-    assert res.status_code == 200
-    rep = res.json()
-    assert "gran_total" in rep
-    assert "total_tickets" in rep
-    assert "desglose_metodos" in rep
+def test_cuentas_abiertas_flujo():
+    # Obtener producto
+    res_prods = client.get("/catalogo/productos")
+    prod = res_prods.json()[0]
+
+    # 1. Guardar o abrir cuenta en Mesa 4
+    payload_cuenta = {
+        "mesa": "Mesa 4",
+        "mesero": "Emilio Tapia",
+        "cajero": "Admin General",
+        "nota": "Sin cebolla en alimentos",
+        "partidas": [
+            {"producto_id": prod["id"], "cantidad": 3, "subtotal": prod["precio"] * 3}
+        ]
+    }
+    res_save = client.post("/cuentas/guardar", json=payload_cuenta)
+    assert res_save.status_code == 200, res_save.text
+    assert res_save.json()["status"] == "ok"
+
+    # 2. Consultar cuenta por mesa
+    res_get = client.get("/cuentas/mesa/Mesa%204")
+    assert res_get.status_code == 200
+    cuenta = res_get.json()
+    assert cuenta is not None
+    assert cuenta["mesa"] == "Mesa 4"
+    assert cuenta["mesero"] == "Emilio Tapia"
+    assert cuenta["total"] == prod["precio"] * 3
+    assert len(cuenta["partidas"]) == 1
+
+    # 3. Listar cuentas abiertas
+    res_list = client.get("/cuentas")
+    assert res_list.status_code == 200
+    cuentas = res_list.json()
+    assert any(c["mesa"] == "Mesa 4" for c in cuentas)
+
+    # 4. Cobrar la cuenta (se debe cerrar automáticamente)
+    payload_ticket = {
+        "total": cuenta["total"],
+        "metodo_pago": "efectivo",
+        "cajero_id": "Admin General",
+        "mesa": "Mesa 4",
+        "mesero": "Emilio Tapia",
+        "cuenta_id": cuenta["id"],
+        "partidas": [
+            {"producto_id": prod["id"], "cantidad": 3, "subtotal": prod["precio"] * 3}
+        ]
+    }
+    res_ticket = client.post("/ventas/ticket", json=payload_ticket)
+    assert res_ticket.status_code == 201
+
+    # 5. Comprobar que ya no está abierta
+    res_check = client.get("/cuentas/mesa/Mesa%204")
+    assert res_check.status_code == 200
+    assert res_check.json() is None

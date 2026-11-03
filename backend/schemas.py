@@ -108,6 +108,9 @@ class TicketCreate(BaseModel):
     metodo_pago: str
     cajero_id: str
     turno_id: Optional[int] = None
+    mesa: Optional[str] = "Mesa 1"
+    mesero: Optional[str] = "General"
+    cuenta_id: Optional[int] = None
     partidas: List[PartidaItem]
 
 class TicketResponse(BaseModel):
@@ -117,4 +120,34 @@ class TicketResponse(BaseModel):
     metodo_pago: str
     cajero_id: str
     turno_id: Optional[int] = None
+    mesa: Optional[str] = None
+    mesero: Optional[str] = None
     model_config = ConfigDict(from_attributes=True)
+
+
+# --- SCHEMAS DE CUENTAS ABIERTAS ---
+class PartidaCuentaDetalle(BaseModel):
+    id: int
+    producto_id: int
+    nombre: str
+    precio: float
+    cantidad: int
+    subtotal: float
+
+class CuentaGuardarRequest(BaseModel):
+    mesa: str
+    mesero: str
+    cajero: str
+    nota: Optional[str] = ""
+    partidas: List[PartidaItem]
+
+class CuentaDetalleResponse(BaseModel):
+    id: int
+    mesa: str
+    mesero: str
+    cajero: str
+    fecha_apertura: datetime
+    nota: str
+    estado: str
+    total: float
+    partidas: List[PartidaCuentaDetalle]

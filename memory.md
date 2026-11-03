@@ -21,6 +21,12 @@
 - [x] Teclado numérico táctil en pantalla integrado en el modal de cobro (1-9, C, 0, ⌫).
 - [x] Cotejo de pago con tarjeta requiriendo los últimos 4 dígitos y campo opcional de autorización/voucher.
 - [x] Asignación táctil e interactiva de Mesa (Matriz 1-16, Barra, Para Llevar) y Mesero responsable por comanda.
+- [x] Lógica de **Cuenta Abierta por Mesa y Mesero**:
+  - Persistencia de comandas abiertas en base de datos (`cuentas_abiertas` y `partidas_cuenta`).
+  - Botón "Guardar en Cuenta Abierta" para pausar y acumular consumos de la mesa.
+  - Indicador visual e interactivo de mesas ocupadas con cuenta abierta y saldo actual en tiempo real.
+  - Modal y botón "Cuentas Abiertas" en barra de navegación para consultar, reanudar y cobrar comandas.
+  - Cierre automático de cuenta abierta al momento de cobrar e imprimir el ticket.
 - [x] Vista previa estilizada de ticket físico térmico tras completar la venta con desglose de mesa, mesero, cajero, tarjeta o efectivo y cambio.
 - [x] Suite de pruebas automatizadas en backend con Pytest (`test_pos.py`).
 - [x] Commit y push a GitHub.

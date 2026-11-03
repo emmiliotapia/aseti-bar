@@ -78,9 +78,38 @@ class Ticket(Base):
     fecha_hora = Column(DateTime, server_default=func.now(), nullable=False)
     metodo_pago = Column(String, nullable=False)
     cajero_id = Column(String, nullable=False)
+    mesa = Column(String, default="Mesa 1", nullable=True)
+    mesero = Column(String, default="General", nullable=True)
 
     turno = relationship("Turno", back_populates="tickets")
     partidas = relationship("Partida", back_populates="ticket", cascade="all, delete-orphan")
+
+
+class CuentaAbierta(Base):
+    __tablename__ = "cuentas_abiertas"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    mesa = Column(String, nullable=False, index=True) # ej: "Mesa 1", "Barra 1", etc.
+    mesero = Column(String, nullable=False) # Nombre del mesero a cargo
+    cajero = Column(String, nullable=False) # Quién abrió o modificó
+    fecha_apertura = Column(DateTime, server_default=func.now(), nullable=False)
+    nota = Column(String, default="", nullable=False)
+    estado = Column(String, default="abierta", nullable=False) # 'abierta' | 'cerrada'
+
+    partidas = relationship("PartidaCuenta", back_populates="cuenta", cascade="all, delete-orphan")
+
+
+class PartidaCuenta(Base):
+    __tablename__ = "partidas_cuenta"
+
+    id = Column(Integer, primary_key=True, index=True, autoincrement=True)
+    cuenta_id = Column(Integer, ForeignKey("cuentas_abiertas.id", ondelete="CASCADE"), nullable=False)
+    producto_id = Column(Integer, ForeignKey("productos.id"), nullable=False)
+    cantidad = Column(Integer, default=1, nullable=False)
+    subtotal = Column(Float, nullable=False)
+
+    cuenta = relationship("CuentaAbierta", back_populates="partidas")
+    producto = relationship("Producto")
 
 
 class Partida(Base):
