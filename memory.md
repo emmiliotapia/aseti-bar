@@ -11,6 +11,10 @@
   - `partidas`: `id`, `ticket_id` (FK tickets), `producto_id` (FK productos), `subtotal`.
   - Cortes de caja: Corte X (arqueo sobre turno activo) y Corte Z (cierre formal y sellado de turno).
   - Integridad referencial: `PRAGMA foreign_keys = ON;`.
+- Repositorio y Versionado:
+  - Remoto: `origin -> https://github.com/emmiliotapia/aseti-bar.git`
+  - Rama: `main`
+  - `.gitignore` robusto ignorando `node_modules`, `dist`, `__pycache__`, bases de datos SQLite locales (`*.db`, `*.sqlite3`) y logs.
 - Diseño estricto: Dark Mode "Obsidian & Gold" con retículas suizas (`#0B0C10` obsidiana base, `#14171E` tarjetas, `#1F2833` paneles, `#C5A059` oro de acento).
 - Tipografía dual + mono: `Syne` (display/títulos), `Plus Jakarta Sans` (UI/contenido) y `JetBrains Mono` (precios y métricas numéricas).
 - Estructura Monorepo y Dockerización:
@@ -20,6 +24,7 @@
 - Habilitación de skills locales en Antigravity (`skills/ui-obsidian-gold.md` y `skills/sqlite-pos-rules.md`).
 
 ## Tareas Pendientes (TODO)
+- [ ] Push a `origin main` (cuando se configure autenticación en Git/SSH/PAT).
 - [ ] Generar pantalla de Login táctil por PIN y teclado numérico en React bajo `ui-obsidian-gold.md`.
 - [ ] Flujo de Inicio de Turno (fondo inicial de caja).
 - [ ] Actualizar modelos backend (`models.py`, `schemas.py`) y endpoints para usuarios, turnos, configuración, Corte X y Corte Z.
@@ -29,11 +34,10 @@
 
 ## Hitos Completados
 - [x] Definición de arquitectura base y archivos de contexto maestro (`gemini.mti`, `gemini.md`, `memory.md`, `errores.md`).
-- [x] **Redefinición y expansión del alcance del MVP en documentos maestros**:
-  - `gemini.md`: Flujos de login por PIN, inicio de turno con fondo inicial, Cortes X/Z y Admin expandido (cajeros, productos, configuración).
-  - `skills/sqlite-pos-rules.md`: Modelado estricto de tablas `usuarios`, `turnos`, `configuracion`, y actualización de `tickets` con `turno_id`.
-- [x] Creación y consolidación de directivas en `skills/ui-obsidian-gold.md`.
+- [x] Redefinición y expansión del alcance del MVP en documentos maestros.
+- [x] Creación y consolidación de directivas en `skills/sqlite-pos-rules.md` y `skills/ui-obsidian-gold.md`.
 - [x] Inicialización del entorno Frontend con React, Vite y TailwindCSS.
 - [x] Construcción del componente principal `CajaView.jsx` con retícula suiza táctil y diseño Obsidian & Gold.
 - [x] Inicialización del backend con FastAPI y SQLAlchemy.
 - [x] Configuración de Docker y Docker Compose para backend y frontend.
+- [x] **Configuración e inicialización del repositorio Git vinculado a `https://github.com/emmiliotapia/aseti-bar.git` con buenas prácticas de `.gitignore` (exclusión de `.db`, temporales, node_modules) y commit inicial en rama `main`.**
