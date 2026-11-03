@@ -105,6 +105,7 @@ class PartidaItem(BaseModel):
 
 class TicketCreate(BaseModel):
     total: float
+    propina: Optional[float] = 0.0
     metodo_pago: str
     cajero_id: str
     turno_id: Optional[int] = None
@@ -116,6 +117,7 @@ class TicketCreate(BaseModel):
 class TicketResponse(BaseModel):
     id: int
     total: float
+    propina: Optional[float] = 0.0
     fecha_hora: datetime
     metodo_pago: str
     cajero_id: str

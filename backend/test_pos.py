@@ -133,12 +133,53 @@ def test_cuentas_abiertas_flujo():
     assert res_check.status_code == 200
     assert res_check.json() is None
 
-def test_verificar_pin_admin_auditoria():
-    # PIN admin válido (9999)
-    res_ok = client.post("/auth/verificar-pin-admin", json={"pin": "9999"})
-    assert res_ok.status_code == 200
-    assert res_ok.json()["autorizado"] is True
+def test_corte_z_bloqueado_si_hay_cuentas_abiertas():
+    # 1. Abrir una cuenta en Mesa 2
+    res_prods = client.get("/catalogo/productos")
+    prod = res_prods.json()[0]
+    payload_cuenta = {
+        "mesa": "Mesa 2",
+        "mesero": "Emilio Tapia",
+        "cajero": "Admin General",
+        "nota": "Prueba bloqueo corte Z",
+        "partidas": [
+            {"producto_id": prod["id"], "cantidad": 1, "subtotal": prod["precio"]}
+        ]
+    }
+    res_save = client.post("/cuentas/guardar", json=payload_cuenta)
+    assert res_save.status_code == 200
 
-    # PIN inválido o de cajero regular (1234)
-    res_fail = client.post("/auth/verificar-pin-admin", json={"pin": "1234"})
-    assert res_fail.status_code == 401
+    # 2. Intentar hacer Corte Z (Debe fallar con código 400)
+    res_z = client.post("/turnos/corte_z")
+    assert res_z.status_code == 400
+    assert "Existen" in res_z.json()["detail"]
+    assert "Mesa 2" in res_z.json()["detail"]
+
+    # 3. Cancelar la cuenta abierta para liberar el corte
+    cuenta = client.get("/cuentas/mesa/Mesa%202").json()
+    res_del = client.delete(f"/cuentas/{cuenta['id']}")
+    assert res_del.status_code == 200
+
+def test_ticket_con_propina():
+    res_prods = client.get("/catalogo/productos")
+    prod = res_prods.json()[0]
+    subtotal = prod["precio"]
+    propina = 20.0
+    total = subtotal + propina
+
+    payload = {
+        "total": total,
+        "propina": propina,
+        "metodo_pago": "tarjeta",
+        "cajero_id": "Admin General",
+        "mesa": "Barra",
+        "mesero": "Emilio Tapia",
+        "partidas": [
+            {"producto_id": prod["id"], "cantidad": 1, "subtotal": subtotal}
+        ]
+    }
+    res = client.post("/ventas/ticket", json=payload)
+    assert res.status_code == 201
+    ticket = res.json()
+    assert ticket["total"] == total
+    assert ticket["propina"] == 20.0

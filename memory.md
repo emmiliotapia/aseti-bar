@@ -16,7 +16,13 @@
   - Al confirmar la venta, se genera y muestra el **Ticket Previo / Comprobante Térmico** con cabecera de negocio, mesa, cajero, desglose de partidas, total, efectivo entregado y cambio devuelto.
 
 ## Hitos Completados
-- [x] Modal interactivo de cobro en efectivo y tarjeta.
+- [x] Modal interactivo de cobro en efectivo y tarjeta con **Selector de Propina Voluntaria (0%, 10%, 15%, 20%)**:
+  - Desglose en vivo de consumo + propina calculada.
+  - Almacenamiento del campo `propina` en la tabla `tickets`.
+  - Impresión clara en el comprobante/ticket térmico (`Subtotal alimentos y bebidas`, `Propina voluntaria`, `TOTAL`).
+- [x] **Bloqueo Estricto de Corte Z:**
+  - El sistema prohíbe realizar el Corte Z si aún existen cuentas abiertas pendientes de cobro en cualquier mesa o barra.
+  - Despliega mensaje explícito indicando las mesas exactas con comanda activa antes de permitir sellar el turno.
 - [x] Selector táctil de billetes rápidos y cálculo de cambio al cliente.
 - [x] Teclado numérico táctil en pantalla integrado en el modal de cobro (1-9, C, 0, ⌫).
 - [x] Cotejo de pago con tarjeta requiriendo los últimos 4 dígitos y campo opcional de autorización/voucher.
@@ -31,5 +37,5 @@
   - Al cambiar de mesa, la comanda en pantalla se limpia automáticamente y solo recupera la comanda específica de la nueva mesa seleccionada (si tiene cuenta abierta).
   - Nadie (cajero o mesero) puede borrar la comanda ni eliminar partidas completas sin ingresar el **NIP de Administrador** para auditar cancelaciones.
 - [x] Vista previa estilizada de ticket físico térmico tras completar la venta con desglose de mesa, mesero, cajero, tarjeta o efectivo y cambio.
-- [x] Suite de pruebas automatizadas en backend con Pytest (`test_pos.py`, 8 pruebas pasando).
+- [x] Suite de pruebas automatizadas en backend con Pytest (`test_pos.py`, 9 pruebas pasando al 100%).
 - [x] Commit y push a GitHub.

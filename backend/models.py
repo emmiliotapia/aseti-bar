@@ -75,6 +75,7 @@ class Ticket(Base):
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     turno_id = Column(Integer, ForeignKey("turnos.id"), nullable=True)
     total = Column(Float, nullable=False)
+    propina = Column(Float, default=0.0, nullable=False)
     fecha_hora = Column(DateTime, server_default=func.now(), nullable=False)
     metodo_pago = Column(String, nullable=False)
     cajero_id = Column(String, nullable=False)

@@ -67,6 +67,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [modalCobro, setModalCobro] = useState(false);
   const [metodoSeleccionado, setMetodoSeleccionado] = useState('efectivo'); // 'efectivo' | 'tarjeta'
   const [montoRecibido, setMontoRecibido] = useState('');
+  const [propinaSeleccionada, setPropinaSeleccionada] = useState(0); // 0 | 10 | 15 | 20 | personalizado
+  const [montoPropina, setMontoPropina] = useState(0); // Valor numérico calculado de la propina
   const [ultimosDigitosTarjeta, setUltimosDigitosTarjeta] = useState(''); // Cotejo de tarjeta
   const [numAutorizacion, setNumAutorizacion] = useState(''); // Número de voucher / autorización opcional
   const [ticketFinalizado, setTicketFinalizado] = useState(null); // Para mostrar vista previa o imprimir ticket tras cobro
@@ -299,7 +301,17 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const limpiarTicket = () => setTicketItems([]);
 
   const subtotal = ticketItems.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
-  const total = subtotal;
+  const totalConPropina = subtotal + montoPropina;
+  const total = totalConPropina;
+
+  const seleccionarPorcentajePropina = (pct) => {
+    setPropinaSeleccionada(pct);
+    const calculada = Math.round((subtotal * (pct / 100)) * 10) / 10;
+    setMontoPropina(calculada);
+    if (metodoSeleccionado === 'efectivo') {
+      setMontoRecibido((subtotal + calculada).toString());
+    }
+  };
 
   const productosFiltrados = productos.filter(p => {
     const coincideCat = categoriaActiva === 'Todos' || p.categoria === categoriaActiva;
@@ -310,7 +322,9 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const abrirCobroModal = (metodo) => {
     if (ticketItems.length === 0) return;
     setMetodoSeleccionado(metodo);
-    setMontoRecibido(total.toString());
+    setPropinaSeleccionada(0);
+    setMontoPropina(0);
+    setMontoRecibido(subtotal.toString());
     setUltimosDigitosTarjeta('');
     setNumAutorizacion('');
     setModalCobro(true);
@@ -355,6 +369,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
     try {
       const payload = {
         total,
+        propina: montoPropina,
         metodo_pago: metodoSeleccionado,
         cajero_id: meseroSeleccionado || usuario?.nombre || "Cajero",
         turno_id: turnoActivo?.id || null,
@@ -376,6 +391,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
       setTicketFinalizado({
         id: resTicket.id,
         items: [...ticketItems],
+        subtotal,
+        propina: montoPropina,
         total,
         pagado,
         cambio: cambioCalculado,
@@ -943,8 +960,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 }}
                 className={`p-4 rounded-2xl border flex flex-col items-center gap-2 cursor-pointer transition active:scale-95 ${
                   metodoSeleccionado === 'efectivo'
-                    ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.3)]'
-                    : 'bg-[#0B0C10] border-[#1F2833] text-[#8E9297] hover:text-white'
+                    ? 'bg-[#E76F51] border-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.35)] font-black'
+                    : 'bg-[#0C1821] border-[#264653] text-[#93A8AC] hover:text-white'
                 }`}
               >
                 <Banknote size={24} />
@@ -959,8 +976,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 }}
                 className={`p-4 rounded-2xl border flex flex-col items-center gap-2 cursor-pointer transition active:scale-95 ${
                   metodoSeleccionado === 'tarjeta'
-                    ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.3)]'
-                    : 'bg-[#0B0C10] border-[#1F2833] text-[#8E9297] hover:text-white'
+                    ? 'bg-[#E76F51] border-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.35)] font-black'
+                    : 'bg-[#0C1821] border-[#264653] text-[#93A8AC] hover:text-white'
                 }`}
               >
                 <CreditCard size={24} />
@@ -968,12 +985,55 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               </button>
             </div>
 
-            {/* Total a Pagar */}
-            <div className="p-4 bg-[#0B0C10] rounded-2xl border border-[#1F2833] flex justify-between items-baseline">
-              <span className="text-xs font-mono uppercase text-[#8E9297] font-bold">Total a Cobrar</span>
-              <span className="text-3xl font-black font-['JetBrains_Mono'] text-[#C5A059]">
-                ${total.toFixed(2)}
-              </span>
+            {/* Selector de Propina Sugerida */}
+            <div className="space-y-2 bg-[#0C1821] p-3.5 rounded-2xl border border-[#264653]">
+              <div className="flex justify-between items-center text-xs">
+                <span className="font-mono uppercase text-[#93A8AC] font-bold">Ofrecer Propina</span>
+                <span className="font-mono font-bold text-[#E9C46A]">
+                  {montoPropina > 0 ? `+$${montoPropina.toFixed(2)} (${propinaSeleccionada}%)` : 'Sin propina'}
+                </span>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: '0%', val: 0 },
+                  { label: '10%', val: 10 },
+                  { label: '15%', val: 15 },
+                  { label: '20%', val: 20 },
+                ].map(op => (
+                  <button
+                    key={op.val}
+                    type="button"
+                    onClick={() => seleccionarPorcentajePropina(op.val)}
+                    className={`py-2 rounded-xl border text-xs font-mono font-bold transition cursor-pointer active:scale-95 ${
+                      propinaSeleccionada === op.val
+                        ? 'bg-[#E9C46A] border-[#E9C46A] text-[#0C1821] shadow-md'
+                        : 'bg-[#1B3B4B] border-[#264653] text-[#F4EBD9] hover:bg-[#264653]'
+                    }`}
+                  >
+                    {op.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Total a Pagar y Desglose */}
+            <div className="p-4 bg-[#0C1821] rounded-2xl border border-[#264653] space-y-1">
+              <div className="flex justify-between text-xs text-[#93A8AC] font-mono">
+                <span>Consumo:</span>
+                <span>${subtotal.toFixed(2)}</span>
+              </div>
+              {montoPropina > 0 && (
+                <div className="flex justify-between text-xs text-[#E9C46A] font-mono">
+                  <span>Propina voluntaria ({propinaSeleccionada}%):</span>
+                  <span>+${montoPropina.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between items-baseline pt-1 border-t border-[#264653]">
+                <span className="text-xs font-mono uppercase text-[#F4EBD9] font-bold">Total a Cobrar</span>
+                <span className="text-3xl font-black font-['JetBrains_Mono'] text-[#E9C46A]">
+                  ${total.toFixed(2)}
+                </span>
+              </div>
             </div>
 
             {/* Cálculo de Efectivo y Cambio */}
@@ -1168,7 +1228,17 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
             {/* Totales y Cambio */}
             <div className="space-y-1 text-xs pt-1">
-              <div className="flex justify-between text-base font-extrabold pt-1">
+              <div className="flex justify-between text-gray-700">
+                <span>Subtotal alimentos y bebidas:</span>
+                <span>${(ticketFinalizado.subtotal || ticketFinalizado.total).toFixed(2)}</span>
+              </div>
+              {ticketFinalizado.propina > 0 && (
+                <div className="flex justify-between text-gray-700">
+                  <span>Propina voluntaria:</span>
+                  <span>+${ticketFinalizado.propina.toFixed(2)}</span>
+                </div>
+              )}
+              <div className="flex justify-between text-base font-extrabold pt-1 border-t border-gray-300">
                 <span>TOTAL:</span>
                 <span>${ticketFinalizado.total.toFixed(2)}</span>
               </div>

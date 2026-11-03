@@ -275,6 +275,16 @@ def generar_corte_x(db: Session = Depends(get_db)):
 
 @app.post("/turnos/corte_z", tags=["Cortes"])
 def generar_corte_z(db: Session = Depends(get_db)):
+    # REGLA ESTRICTA: No se puede generar Corte Z si aún existen cuentas abiertas pendientes de cobro
+    cuentas_pendientes = db.query(models.CuentaAbierta).filter(models.CuentaAbierta.estado == "abierta").all()
+    if cuentas_pendientes:
+        mesas_abiertas = [c.mesa for c in cuentas_pendientes]
+        mesas_str = ", ".join(mesas_abiertas)
+        raise HTTPException(
+            status_code=400,
+            detail=f"No se puede realizar el Corte Z: Existen {len(cuentas_pendientes)} cuenta(s) abierta(s) sin cobrar ({mesas_str}). Cierre o cobre las comandas antes del corte definitivo."
+        )
+
     corte_data = generar_corte_x(db)
     turno = db.query(models.Turno).filter(models.Turno.id == corte_data["turno_id"]).first()
     turno.estado = "cerrado"
@@ -462,6 +472,7 @@ def registrar_ticket(ticket_data: schemas.TicketCreate, db: Session = Depends(ge
 
     nuevo_ticket = models.Ticket(
         total=ticket_data.total,
+        propina=ticket_data.propina or 0.0,
         metodo_pago=ticket_data.metodo_pago,
         cajero_id=ticket_data.cajero_id,
         turno_id=turno_id,
