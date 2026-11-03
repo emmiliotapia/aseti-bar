@@ -1,61 +1,150 @@
 import React, { useState } from 'react';
-import { 
-  ShoppingBag, 
-  Settings, 
-  Trash2, 
-  CreditCard, 
-  Banknote, 
-  Plus, 
-  Minus, 
-  CheckCircle2, 
-  Sparkles,
+import {
+  LayoutDashboard,
+  Receipt,
+  UtensilsCrossed,
+  Grid,
+  Users,
+  UserCheck,
+  BarChart3,
+  Settings,
+  LogOut,
   Search,
-  X
+  Bell,
+  ChevronDown,
+  Trash2,
+  Plus,
+  Minus,
+  CheckCircle2,
+  Coffee,
+  Beer,
+  Wine,
+  Pizza,
+  Flame,
+  Cookie,
+  CreditCard,
+  Banknote,
+  Edit3
 } from 'lucide-react';
 
-// Catálogo simulado representativo de un Bar/Restobar de alto flujo
-const PRODUCTOS_MOCK = [
-  // Cervezas
-  { id: 1, nombre: "Corona Extra 355ml", precio: 48.0, categoria: "Cervezas", code: "CER-01" },
-  { id: 2, nombre: "Victoria Clara 355ml", precio: 48.0, categoria: "Cervezas", code: "CER-02" },
-  { id: 3, nombre: "Modelo Especial 355ml", precio: 52.0, categoria: "Cervezas", code: "CER-03" },
-  { id: 4, nombre: "Negra Modelo 355ml", precio: 55.0, categoria: "Cervezas", code: "CER-04" },
-  { id: 5, nombre: "Stella Artois 330ml", precio: 65.0, categoria: "Cervezas", code: "CER-05" },
-  { id: 6, nombre: "Michelada Cubana Prep.", precio: 25.0, categoria: "Cervezas", code: "CER-06" },
-  
-  // Destilados y Copas
-  { id: 7, nombre: "Tequila Dobel Diamante", precio: 140.0, categoria: "Destilados", code: "DST-01" },
-  { id: 8, nombre: "Mezcal 400 Conejos Joven", precio: 130.0, categoria: "Destilados", code: "DST-02" },
-  { id: 9, nombre: "Whisky JW Black Label", precio: 165.0, categoria: "Destilados", code: "DST-03" },
-  { id: 10, nombre: "Gin Hendrick's Tonic", precio: 155.0, categoria: "Destilados", code: "DST-04" },
-  { id: 11, nombre: "Vodka Grey Goose", precio: 150.0, categoria: "Destilados", code: "DST-05" },
-  { id: 12, nombre: "Ron Zacapa 23 Años", precio: 180.0, categoria: "Destilados", code: "DST-06" },
+const CATEGORIAS_CONFIG = [
+  { id: 'Todos', label: 'Todo', icon: Grid },
+  { id: 'Cervezas', label: 'Cervezas', icon: Beer },
+  { id: 'Destilados', label: 'Destilados', icon: Wine },
+  { id: 'Cocina', label: 'Cocina', icon: Pizza },
+  { id: 'Snacks', label: 'Snacks', icon: Cookie },
+  { id: 'Sin Alcohol', label: 'Bebidas', icon: Coffee },
+];
 
-  // Alimentos y Botanas
-  { id: 13, nombre: "Nachos Supremos con Arrachera", precio: 135.0, categoria: "Cocina", code: "COC-01" },
-  { id: 14, nombre: "Alitas Hot BBQ (8 pzas)", precio: 140.0, categoria: "Cocina", code: "COC-02" },
-  { id: 15, nombre: "Papas a la Francesa Trufadas", precio: 85.0, categoria: "Cocina", code: "COC-03" },
-  { id: 16, nombre: "Hamburguesa Smash Doble", precio: 160.0, categoria: "Cocina", code: "COC-04" },
-  { id: 17, nombre: "Guacamole Rústico con Totopos", precio: 95.0, categoria: "Cocina", code: "COC-05" },
-  
-  // Sin Alcohol / Mezcladores
-  { id: 18, nombre: "Agua Mineral Topo Chico", precio: 40.0, categoria: "Sin Alcohol", code: "BEB-01" },
-  { id: 19, nombre: "Refresco Lata 355ml", precio: 35.0, categoria: "Sin Alcohol", code: "BEB-02" },
-  { id: 20, nombre: "Red Bull Energy Drink", precio: 75.0, categoria: "Sin Alcohol", code: "BEB-03" },
-  { id: 21, nombre: "Limonada Natural Fría", precio: 45.0, categoria: "Sin Alcohol", code: "BEB-04" },
+const PRODUCTOS_CATALOGO = [
+  {
+    id: 1,
+    nombre: "Corona Extra 355ml",
+    precio: 48.0,
+    categoria: "Cervezas",
+    emoji: "🍺",
+    desc: "Cerveza clara bien fría"
+  },
+  {
+    id: 2,
+    nombre: "Victoria Clara 355ml",
+    precio: 48.0,
+    categoria: "Cervezas",
+    emoji: "🍻",
+    desc: "Sabor tradicional de malta"
+  },
+  {
+    id: 3,
+    nombre: "Tequila Dobel Diamante",
+    precio: 140.0,
+    categoria: "Destilados",
+    emoji: "🥃",
+    desc: "Copa servida o en las rocas"
+  },
+  {
+    id: 4,
+    nombre: "Mezcal 400 Conejos Joven",
+    precio: 130.0,
+    categoria: "Destilados",
+    emoji: "🍹",
+    desc: "Con naranja y sal de gusano"
+  },
+  {
+    id: 5,
+    nombre: "Burger Doble ASETI",
+    precio: 155.0,
+    categoria: "Cocina",
+    emoji: "🍔",
+    desc: "200g res, queso cheddar fundido"
+  },
+  {
+    id: 6,
+    nombre: "Papas Gajo Trufadas",
+    precio: 75.0,
+    categoria: "Cocina",
+    emoji: "🍟",
+    desc: "Con parmesano y alioli artesanal"
+  },
+  {
+    id: 7,
+    nombre: "Pizza Pepperoni Artesanal",
+    precio: 165.0,
+    categoria: "Cocina",
+    emoji: "🍕",
+    desc: "Masa madre y mozzarella fresca"
+  },
+  {
+    id: 8,
+    nombre: "Alitas Hot BBQ (8 pzas)",
+    precio: 140.0,
+    categoria: "Cocina",
+    emoji: "🍗",
+    desc: "Bañadas en salsa casera ahumada"
+  },
+  {
+    id: 9,
+    nombre: "Nachos Arrachera Grill",
+    precio: 135.0,
+    categoria: "Snacks",
+    emoji: "🧀",
+    desc: "Totopos, guacamole y queso cheddar"
+  },
+  {
+    id: 10,
+    nombre: "Whisky JW Black Label",
+    precio: 165.0,
+    categoria: "Destilados",
+    emoji: "🥃",
+    desc: "Copa doble con hielo premium"
+  },
+  {
+    id: 11,
+    nombre: "Gin Hendrick's Botanic",
+    precio: 155.0,
+    categoria: "Destilados",
+    emoji: "🍸",
+    desc: "Con tónica y pepino fresco"
+  },
+  {
+    id: 12,
+    nombre: "Agua Mineral Topo Chico",
+    precio: 40.0,
+    categoria: "Sin Alcohol",
+    emoji: "🥤",
+    desc: "Vidrio 355ml extra con gas"
+  },
 ];
 
 export default function CajaView({ onSwitchToAdmin }) {
-  const [productos] = useState(PRODUCTOS_MOCK);
   const [ticketItems, setTicketItems] = useState([]);
-  const [categoriaActiva, setCategoriaActiva] = useState("Todos");
+  const [categoriaActiva, setCategoriaActiva] = useState('Todos');
+  const [modalidad, setModalidad] = useState('barra'); // 'barra' | 'mesa' | 'llevar'
+  const [mesaSeleccionada, setMesaSeleccionada] = useState(12);
+  const [busqueda, setBusqueda] = useState('');
   const [cobroExitoso, setCobroExitoso] = useState(false);
-  const [busqueda, setBusqueda] = useState("");
+  const [notaOrden, setNotaOrden] = useState('');
 
-  const categorias = ["Todos", ...new Set(productos.map(p => p.categoria))];
-
-  // Agregar producto al ticket
-  const agregarAlTicket = (producto) => {
+  const agregarProducto = (producto) => {
     setTicketItems(prev => {
       const idx = prev.findIndex(item => item.id === producto.id);
       if (idx >= 0) {
@@ -67,8 +156,7 @@ export default function CajaView({ onSwitchToAdmin }) {
     });
   };
 
-  // Ajustar cantidad de una partida
-  const ajustarCantidad = (id, delta) => {
+  const modificarCantidad = (id, delta) => {
     setTicketItems(prev =>
       prev
         .map(item => (item.id === id ? { ...item, cantidad: item.cantidad + delta } : item))
@@ -76,17 +164,17 @@ export default function CajaView({ onSwitchToAdmin }) {
     );
   };
 
-  // Quitar partida individual
-  const eliminarPartida = (id) => {
-    setTicketItems(prev => prev.filter(item => item.id !== id));
-  };
+  const limpiarTicket = () => setTicketItems([]);
 
-  // Limpiar todo el ticket
-  const limpiarTicket = () => {
-    setTicketItems([]);
-  };
+  const subtotal = ticketItems.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
+  const total = subtotal;
 
-  // Simular cobro rápido
+  const productosFiltrados = PRODUCTOS_CATALOGO.filter(p => {
+    const coincideCat = categoriaActiva === 'Todos' || p.categoria === categoriaActiva;
+    const coincideBusq = busqueda.trim() === '' || p.nombre.toLowerCase().includes(busqueda.toLowerCase());
+    return coincideCat && coincideBusq;
+  });
+
   const ejecutarCobro = (metodo) => {
     if (ticketItems.length === 0) return;
     setCobroExitoso(true);
@@ -96,204 +184,320 @@ export default function CajaView({ onSwitchToAdmin }) {
     }, 1200);
   };
 
-  // Cálculos matemáticos puros
-  const totalItems = ticketItems.reduce((acc, item) => acc + item.cantidad, 0);
-  const subtotal = ticketItems.reduce((acc, item) => acc + item.precio * item.cantidad, 0);
-
-  // Filtrado de retícula
-  const productosFiltrados = productos.filter(p => {
-    const coincideCategoria = categoriaActiva === "Todos" || p.categoria === categoriaActiva;
-    const coincideBusqueda = busqueda.trim() === "" || 
-      p.nombre.toLowerCase().includes(busqueda.toLowerCase()) || 
-      p.code.toLowerCase().includes(busqueda.toLowerCase());
-    return coincideCategoria && coincideBusqueda;
-  });
-
   return (
     <div className="flex h-screen w-screen bg-[#0B0C10] text-[#C5C6C7] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
       
       {/* ========================================================
-          PANEL PRINCIPAL: RETÍCULA SUIZA (SWISS GRID) DE CATÁLOGO
+          1. SIDEBAR LATERAL ULTRA-FINO (ESTILO MODERNO)
           ======================================================== */}
-      <section className="flex-1 flex flex-col min-w-0 border-r border-[#1F2833]">
-        
-        {/* Barra Superior de Estado y Navegación */}
-        <header className="h-20 px-8 bg-[#14171E] border-b border-[#1F2833] flex items-center justify-between shrink-0">
-          <div className="flex items-center gap-4">
-            <div className="w-3.5 h-3.5 rounded-xs bg-[#C5A059] rotate-45 shadow-[0_0_12px_rgba(197,160,89,0.5)]"></div>
-            <div className="flex items-baseline gap-3">
-              <span className="font-['Syne'] font-extrabold text-2xl tracking-wider text-white">
-                POS BAR
-              </span>
-              <span className="font-['JetBrains_Mono'] text-xs font-bold text-[#C5A059] bg-[#0B0C10] px-2.5 py-1 rounded border border-[#C5A059]/40 tracking-widest uppercase">
-                Obsidian Engine
-              </span>
+      <aside className="w-64 bg-[#14171E] border-r border-[#1F2833] flex flex-col justify-between p-4 shrink-0">
+        <div className="space-y-6">
+          {/* Logo ASETI BAR */}
+          <div className="flex items-center gap-3 px-3 py-2">
+            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#9E7D3B] flex items-center justify-center text-[#0B0C10] font-black font-['Syne'] text-lg shadow-[0_0_15px_rgba(197,160,89,0.3)]">
+              A
+            </div>
+            <div>
+              <h1 className="font-['Syne'] font-extrabold text-base tracking-wider text-white">
+                ASETI <span className="text-[#C5A059]">BAR</span>
+              </h1>
+              <p className="text-[10px] font-['JetBrains_Mono'] tracking-widest text-[#8E9297] uppercase">
+                Obsidian POS v1.0
+              </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-4">
-            {/* Buscador táctil rápido */}
-            <div className="relative w-64">
-              <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#8E9297]" />
-              <input
-                type="text"
-                value={busqueda}
-                onChange={(e) => setBusqueda(e.target.value)}
-                placeholder="Buscar botón..."
-                className="w-full h-11 pl-10 pr-9 bg-[#0B0C10] border border-[#1F2833] focus:border-[#C5A059] rounded-xl text-xs text-white placeholder-[#8E9297] outline-none transition"
-              />
-              {busqueda && (
-                <button
-                  onClick={() => setBusqueda("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#8E9297] hover:text-white"
-                >
-                  <X size={14} />
-                </button>
-              )}
-            </div>
+          {/* Menú de Navegación Vertical */}
+          <nav className="space-y-1.5" aria-label="Navegación principal">
+            <button
+              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)] transition-all active:scale-95 cursor-pointer"
+            >
+              <LayoutDashboard size={18} />
+              <span>Punto de Venta</span>
+            </button>
 
-            {/* Acceso a Admin */}
             <button
               onClick={onSwitchToAdmin}
-              className="flex items-center gap-2.5 h-11 px-4 bg-[#1F2833] active:bg-[#0B0C10] border border-[#2C3540] rounded-xl text-xs font-bold text-white uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
             >
-              <Settings size={16} className="text-[#C5A059]" />
-              <span>Admin</span>
+              <Receipt size={18} />
+              <span>Cortes de Turno</span>
             </button>
+
+            <button
+              onClick={onSwitchToAdmin}
+              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+            >
+              <UtensilsCrossed size={18} />
+              <span>Catálogo & Menú</span>
+            </button>
+
+            <button
+              onClick={onSwitchToAdmin}
+              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+            >
+              <Users size={18} />
+              <span>Cajeros y Roles</span>
+            </button>
+
+            <button
+              onClick={onSwitchToAdmin}
+              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+            >
+              <BarChart3 size={18} />
+              <span>Reportes</span>
+            </button>
+
+            <button
+              onClick={onSwitchToAdmin}
+              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+            >
+              <Settings size={18} />
+              <span>Configuración</span>
+            </button>
+          </nav>
+        </div>
+
+        {/* Cierre de Sesión / Turno */}
+        <button
+          onClick={onSwitchToAdmin}
+          className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider text-red-400/80 hover:text-red-400 hover:bg-red-950/20 rounded-xl border border-transparent hover:border-red-900/30 transition active:scale-95 cursor-pointer"
+        >
+          <LogOut size={18} />
+          <span>Cerrar Sesión</span>
+        </button>
+      </aside>
+
+      {/* ========================================================
+          2. CONTENIDO PRINCIPAL (HEADER + CATEGORÍAS + GRID PRODUCTOS)
+          ======================================================== */}
+      <section className="flex-1 flex flex-col min-w-0 bg-[#0B0C10] border-r border-[#1F2833]">
+        
+        {/* Header Superior: Buscador y Perfil */}
+        <header className="h-20 px-8 bg-[#14171E] border-b border-[#1F2833] flex items-center justify-between gap-6 shrink-0">
+          {/* Barra de Búsqueda Táctil */}
+          <div className="relative flex-1 max-w-md">
+            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E9297]" />
+            <input
+              type="text"
+              value={busqueda}
+              onChange={(e) => setBusqueda(e.target.value)}
+              placeholder="Buscar un trago, platillo o cerveza..."
+              className="w-full h-12 pl-11 pr-4 bg-[#0B0C10] border border-[#1F2833] focus:border-[#C5A059] rounded-2xl text-xs text-white placeholder-[#8E9297] outline-none transition shadow-inner"
+            />
+          </div>
+
+          {/* Notificaciones y Perfil de Usuario */}
+          <div className="flex items-center gap-4">
+            <button
+              aria-label="Notificaciones del sistema"
+              className="w-12 h-12 rounded-2xl bg-[#0B0C10] border border-[#1F2833] flex items-center justify-center text-[#8E9297] hover:text-[#C5A059] transition active:scale-95 cursor-pointer"
+            >
+              <Bell size={18} />
+            </button>
+
+            <div className="flex items-center gap-3 pl-2 border-l border-[#1F2833]">
+              <div className="w-11 h-11 rounded-2xl bg-[#1F2833] border border-[#C5A059]/40 flex items-center justify-center text-white font-['Syne'] font-extrabold text-sm">
+                ET
+              </div>
+              <div className="text-left">
+                <div className="text-xs font-bold text-white leading-tight">Emilio Tapia</div>
+                <div className="text-[10px] font-['JetBrains_Mono'] text-[#C5A059] uppercase tracking-wider font-semibold">Cajero Líder</div>
+              </div>
+            </div>
           </div>
         </header>
 
-        {/* Retícula Suiza de Categorías (Pestañas de Toque Directo) */}
-        <nav className="flex gap-2.5 px-8 py-3.5 bg-[#0B0C10] border-b border-[#1F2833] overflow-x-auto shrink-0">
-          {categorias.map(cat => {
-            const isActive = categoriaActiva === cat;
-            return (
-              <button
-                key={cat}
-                onClick={() => setCategoriaActiva(cat)}
-                className={`h-13 px-6 rounded-xl font-bold text-xs tracking-wider uppercase transition-all duration-100 active:scale-95 cursor-pointer whitespace-nowrap border ${
-                  isActive
-                    ? "bg-[#C5A059] text-[#0B0C10] border-[#C5A059] shadow-[0_4px_16px_rgba(197,160,89,0.25)] font-black"
-                    : "bg-[#14171E] text-[#8E9297] border-[#1F2833] active:bg-[#1F2833] active:text-white"
-                }`}
-              >
-                {cat}
-              </button>
-            );
-          })}
-        </nav>
+        {/* Scrollable Container para Catálogo */}
+        <div className="flex-1 overflow-y-auto p-8 space-y-7">
+          
+          {/* Selector de Categorías con Iconos (Como en el Diseño de Referencia) */}
+          <div className="space-y-3">
+            <h2 className="font-['Syne'] font-bold text-base text-white tracking-wide">
+              Categorías
+            </h2>
 
-        {/* Retícula Suiza de Productos (Objetivos Táctiles Grandes h-28+ w-full) */}
-        <main className="flex-1 p-6 overflow-y-auto grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 auto-rows-[128px]">
-          {productosFiltrados.map(prod => (
-            <button
-              key={prod.id}
-              onClick={() => agregarAlTicket(prod)}
-              className="group relative flex flex-col justify-between p-5 rounded-2xl bg-[#14171E] active:bg-[#1F2833] border border-[#1F2833] active:border-[#C5A059] active:scale-95 transition-all duration-75 text-left cursor-pointer shadow-lg overflow-hidden"
-            >
-              {/* Indicador de Código y Categoría */}
-              <div className="flex items-center justify-between text-[11px] font-['JetBrains_Mono'] text-[#8E9297]">
-                <span className="tracking-widest uppercase">{prod.categoria}</span>
-                <span className="font-semibold text-[#8E9297]/60">{prod.code}</span>
-              </div>
-
-              {/* Nombre de Producto */}
-              <div className="font-['Plus_Jakarta_Sans'] font-bold text-base text-white leading-tight line-clamp-2 my-auto">
-                {prod.nombre}
-              </div>
-
-              {/* Precio en Retícula Oro */}
-              <div className="flex items-center justify-between pt-2 border-t border-[#1F2833]">
-                <span className="text-[10px] uppercase font-mono tracking-wider text-[#8E9297]">Precio</span>
-                <span className="font-['JetBrains_Mono'] font-extrabold text-xl text-[#C5A059]">
-                  ${prod.precio.toFixed(2)}
-                </span>
-              </div>
-            </button>
-          ))}
-        </main>
-      </section>
-
-      {/* ========================================================
-          PANEL LATERAL: TICKET DE COBRO SUIZO (SWISS TICKET PANEL)
-          ======================================================== */}
-      <aside className="w-[450px] bg-[#14171E] flex flex-col h-full border-l border-[#1F2833] shrink-0">
-        
-        {/* Cabecera del Ticket */}
-        <div className="h-20 px-6 border-b border-[#1F2833] flex items-center justify-between bg-[#1F2833]/30 shrink-0">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-[#0B0C10] border border-[#1F2833]">
-              <ShoppingBag className="text-[#C5A059]" size={20} />
-            </div>
-            <div>
-              <h2 className="font-['Syne'] font-extrabold text-lg text-white tracking-wide">Ticket en Curso</h2>
-              <span className="font-['JetBrains_Mono'] text-[11px] text-[#8E9297]">
-                {totalItems} {totalItems === 1 ? 'partida' : 'partidas'} agregadas
-              </span>
+            <div className="grid grid-cols-6 gap-3.5">
+              {CATEGORIAS_CONFIG.map(cat => {
+                const IconComponent = cat.icon;
+                const isActive = categoriaActiva === cat.id;
+                return (
+                  <button
+                    key={cat.id}
+                    onClick={() => setCategoriaActiva(cat.id)}
+                    className={`h-22 flex flex-col items-center justify-center gap-2 rounded-2xl border transition-all duration-100 active:scale-95 cursor-pointer shadow-md ${
+                      isActive
+                        ? "bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_6px_20px_rgba(197,160,89,0.3)] font-black"
+                        : "bg-[#14171E] border-[#1F2833] text-[#8E9297] hover:border-[#2C3540] hover:text-white"
+                    }`}
+                  >
+                    <div className={`p-2 rounded-xl ${isActive ? 'bg-[#0B0C10]/15' : 'bg-[#0B0C10]'}`}>
+                      <IconComponent size={20} className={isActive ? 'text-[#0B0C10]' : 'text-[#C5A059]'} />
+                    </div>
+                    <span className="text-xs tracking-wide uppercase font-bold">{cat.label}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
 
-          {ticketItems.length > 0 && (
+          {/* Grid de Productos Tipo Card Táctil con Botón Integrado */}
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="font-['Syne'] font-bold text-base text-white tracking-wide">
+                Nuestras sugerencias y catálogo
+              </h2>
+              <span className="font-['JetBrains_Mono'] text-xs text-[#8E9297]">
+                {productosFiltrados.length} productos disponibles
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4.5">
+              {productosFiltrados.map(prod => (
+                <div
+                  key={prod.id}
+                  className="p-4 rounded-2xl bg-[#14171E] border border-[#1F2833] flex flex-col justify-between gap-3 shadow-lg hover:border-[#C5A059]/40 transition-all"
+                >
+                  {/* Imagen / Emoji Representativo */}
+                  <div className="h-28 w-full rounded-xl bg-gradient-to-br from-[#1F2833]/80 to-[#0B0C10] border border-[#1F2833] flex items-center justify-center text-4xl shadow-inner">
+                    <span>{prod.emoji}</span>
+                  </div>
+
+                  {/* Información */}
+                  <div className="space-y-1 text-center">
+                    <h3 className="font-bold text-sm text-white line-clamp-1">{prod.nombre}</h3>
+                    <p className="text-[11px] text-[#8E9297] line-clamp-1">{prod.desc}</p>
+                    <div className="font-['JetBrains_Mono'] font-extrabold text-base text-[#C5A059] pt-1">
+                      ${prod.precio.toFixed(2)}
+                    </div>
+                  </div>
+
+                  {/* Botón Táctil de Agregar (Estilo + Ajouter del mockup) */}
+                  <button
+                    onClick={() => agregarProducto(prod)}
+                    className="w-full h-11 flex items-center justify-center gap-1.5 bg-[#C5A059] active:bg-[#D4AF37] text-[#0B0C10] font-black text-xs tracking-wider uppercase rounded-xl shadow-[0_4px_14px_rgba(197,160,89,0.2)] transition active:scale-95 cursor-pointer"
+                  >
+                    <Plus size={16} strokeWidth={3} />
+                    <span>Agregar</span>
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ========================================================
+          3. PANEL LATERAL DERECHO: TICKET / COMMANDE EN COURS
+          ======================================================== */}
+      <aside className="w-[420px] bg-[#14171E] flex flex-col h-full shrink-0 border-l border-[#1F2833]">
+        
+        {/* Cabecera del Pedido */}
+        <div className="p-6 border-b border-[#1F2833] space-y-4 shrink-0 bg-[#1F2833]/20">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="font-['Syne'] font-extrabold text-lg text-white tracking-wide">
+                Comanda en Curso
+              </h2>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="font-['JetBrains_Mono'] text-xs font-bold text-[#C5A059]">Mesa {mesaSeleccionada}</span>
+                <span className="text-[#8E9297] text-xs">• Barra Principal</span>
+              </div>
+            </div>
+
+            {ticketItems.length > 0 && (
+              <button
+                onClick={limpiarTicket}
+                aria-label="Vaciar comanda"
+                className="p-2.5 rounded-xl bg-red-950/20 active:bg-red-900/40 border border-red-900/40 text-red-400 transition active:scale-95 cursor-pointer"
+                title="Limpiar todo"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
+
+          {/* Selector de Modalidad (En Sala / Para Llevar / Domicilio) */}
+          <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#0B0C10] rounded-xl border border-[#1F2833]">
             <button
-              onClick={limpiarTicket}
-              className="h-10 px-3 flex items-center gap-1.5 text-xs font-mono font-bold text-red-400 bg-red-950/20 active:bg-red-900/40 border border-red-900/40 rounded-xl transition active:scale-95 cursor-pointer"
-              title="Vaciar Ticket"
+              onClick={() => setModalidad('mesa')}
+              className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
+                modalidad === 'mesa'
+                  ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]'
+                  : 'text-[#8E9297] hover:text-white'
+              }`}
             >
-              <Trash2 size={15} />
-              <span>Limpiar</span>
+              En Mesa
             </button>
-          )}
+            <button
+              onClick={() => setModalidad('barra')}
+              className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
+                modalidad === 'barra'
+                  ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]'
+                  : 'text-[#8E9297] hover:text-white'
+              }`}
+            >
+              En Barra
+            </button>
+            <button
+              onClick={() => setModalidad('llevar')}
+              className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
+                modalidad === 'llevar'
+                  ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]'
+                  : 'text-[#8E9297] hover:text-white'
+              }`}
+            >
+              Para Llevar
+            </button>
+          </div>
         </div>
 
-        {/* Partidas de Cobro */}
-        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+        {/* Lista de Partidas Seleccionadas */}
+        <div className="flex-1 overflow-y-auto p-5 space-y-3">
           {ticketItems.length === 0 ? (
-            <div className="h-full flex flex-col items-center justify-center text-[#8E9297] space-y-3 opacity-60">
-              <div className="p-5 rounded-2xl bg-[#0B0C10] border border-[#1F2833]">
-                <ShoppingBag size={48} strokeWidth={1.2} className="text-[#C5A059]" />
+            <div className="h-full flex flex-col items-center justify-center text-[#8E9297] space-y-2 opacity-60">
+              <div className="p-4 rounded-2xl bg-[#0B0C10] border border-[#1F2833]">
+                <UtensilsCrossed size={36} className="text-[#C5A059]" />
               </div>
-              <p className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-center px-6 leading-relaxed">
-                Sin artículos seleccionados<br/>
-                <span className="text-[#8E9297]/60 font-sans normal-case text-xs">
-                  Pulsa un botón del catálogo para cobrar
-                </span>
+              <p className="text-xs font-mono uppercase tracking-widest text-center">
+                Comanda vacía
               </p>
             </div>
           ) : (
             ticketItems.map(item => (
               <div
                 key={item.id}
-                className="flex items-center justify-between p-3.5 rounded-xl bg-[#0B0C10] border border-[#1F2833] transition-all"
+                className="flex items-center justify-between p-3.5 rounded-xl bg-[#0B0C10] border border-[#1F2833]"
               >
-                {/* Detalle Producto */}
-                <div className="flex-1 mr-3 min-w-0">
-                  <div className="font-bold text-sm text-white truncate">{item.nombre}</div>
+                <div className="flex-1 mr-2 min-w-0">
+                  <div className="font-bold text-xs text-white truncate">{item.nombre}</div>
                   <div className="text-[11px] font-['JetBrains_Mono'] text-[#8E9297] mt-0.5">
                     ${item.precio.toFixed(2)} c/u
                   </div>
                 </div>
 
-                {/* Modificador Táctil Rápido (Touch Targets Claros) */}
-                <div className="flex items-center gap-1.5 bg-[#14171E] p-1 rounded-xl border border-[#1F2833]">
+                {/* Controles de Cantidad */}
+                <div className="flex items-center gap-1 bg-[#14171E] p-1 rounded-lg border border-[#1F2833]">
                   <button
-                    onClick={() => ajustarCantidad(item.id, -1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F2833] active:bg-[#C5A059] active:text-[#0B0C10] text-white active:scale-95 transition"
+                    onClick={() => modificarCantidad(item.id, -1)}
+                    aria-label={`Reducir ${item.nombre}`}
+                    className="w-7 h-7 flex items-center justify-center rounded bg-[#1F2833] active:bg-[#C5A059] active:text-[#0B0C10] text-white active:scale-95"
                   >
-                    <Minus size={14} />
+                    <Minus size={12} />
                   </button>
-                  <span className="w-7 text-center font-['JetBrains_Mono'] font-extrabold text-sm text-white">
+                  <span className="w-6 text-center font-['JetBrains_Mono'] font-bold text-xs text-white">
                     {item.cantidad}
                   </span>
                   <button
-                    onClick={() => ajustarCantidad(item.id, 1)}
-                    className="w-8 h-8 flex items-center justify-center rounded-lg bg-[#1F2833] active:bg-[#C5A059] active:text-[#0B0C10] text-white active:scale-95 transition"
+                    onClick={() => modificarCantidad(item.id, 1)}
+                    aria-label={`Aumentar ${item.nombre}`}
+                    className="w-7 h-7 flex items-center justify-center rounded bg-[#1F2833] active:bg-[#C5A059] active:text-[#0B0C10] text-white active:scale-95"
                   >
-                    <Plus size={14} />
+                    <Plus size={12} />
                   </button>
                 </div>
 
-                {/* Subtotal Partida */}
-                <div className="w-24 text-right font-['JetBrains_Mono'] font-extrabold text-base text-[#C5A059] pl-2">
+                <div className="w-20 text-right font-['JetBrains_Mono'] font-extrabold text-sm text-[#C5A059]">
                   ${(item.precio * item.cantidad).toFixed(2)}
                 </div>
               </div>
@@ -301,47 +505,65 @@ export default function CajaView({ onSwitchToAdmin }) {
           )}
         </div>
 
-        {/* ========================================================
-            TOTAL Y BOTONES DE COBRO DE ALTO IMPACTO (H-16 W-FULL)
-            ======================================================== */}
-        <div className="p-6 bg-[#0B0C10] border-t-2 border-[#1F2833] space-y-4 shrink-0">
+        {/* Sección de Resumen y Acciones Finales */}
+        <div className="p-6 bg-[#0B0C10] border-t border-[#1F2833] space-y-4 shrink-0">
           
-          {/* Mensaje de Cobro Exitoso */}
+          {/* Nota opcional para cocina/barra */}
+          <div className="flex items-center gap-2 px-3 py-2 bg-[#14171E] rounded-xl border border-[#1F2833]">
+            <Edit3 size={14} className="text-[#8E9297]" />
+            <input
+              type="text"
+              value={notaOrden}
+              onChange={(e) => setNotaOrden(e.target.value)}
+              placeholder="Agregar nota a la orden..."
+              className="w-full bg-transparent text-xs text-white placeholder-[#8E9297] outline-none"
+            />
+          </div>
+
+          {/* Desglose Matemático */}
+          <div className="space-y-1.5 text-xs text-[#8E9297] pt-1">
+            <div className="flex justify-between">
+              <span>Subtotal</span>
+              <span className="font-mono text-white">${subtotal.toFixed(2)}</span>
+            </div>
+            <div className="flex justify-between">
+              <span>Servicio / IVA (0%)</span>
+              <span className="font-mono text-white">$0.00</span>
+            </div>
+            <div className="flex justify-between pt-2 border-t border-[#1F2833] text-sm text-white font-bold items-baseline">
+              <span className="uppercase tracking-wider font-['Syne']">Total a Pagar</span>
+              <span className="font-['JetBrains_Mono'] text-2xl font-black text-[#C5A059]">
+                ${total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+
+          {/* Feedback de Cobro */}
           {cobroExitoso && (
-            <div className="flex items-center justify-center gap-2 p-3 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-emerald-400 font-bold text-sm animate-pulse">
-              <CheckCircle2 size={18} />
-              <span>¡Venta registrada con éxito!</span>
+            <div className="flex items-center justify-center gap-2 p-2.5 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-emerald-400 font-bold text-xs animate-pulse">
+              <CheckCircle2 size={16} />
+              <span>¡Comanda cobrada e impresa!</span>
             </div>
           )}
 
-          {/* Gran Total Suizo */}
-          <div className="p-4 rounded-xl bg-[#14171E] border border-[#1F2833] flex justify-between items-baseline">
-            <span className="font-['JetBrains_Mono'] text-xs uppercase tracking-widest text-[#8E9297] font-bold">
-              Total Cobro
-            </span>
-            <span className="font-['JetBrains_Mono'] text-4xl font-black text-[#C5A059] tracking-tight">
-              ${subtotal.toFixed(2)}
-            </span>
-          </div>
-
-          {/* Botones Táctiles de Cobro Inmediato (Sin depender de hover states) */}
-          <div className="grid grid-cols-2 gap-3">
+          {/* Botones de Acción (Enregistrer / Encaisser adaptados a Obsidian & Gold) */}
+          <div className="space-y-2.5 pt-1">
             <button
               onClick={() => ejecutarCobro("tarjeta")}
               disabled={ticketItems.length === 0}
-              className="h-16 w-full flex items-center justify-center gap-2.5 bg-[#1F2833] active:bg-[#2C3540] disabled:opacity-25 disabled:cursor-not-allowed border-2 border-[#2C3540] rounded-2xl text-white font-extrabold text-sm tracking-wider uppercase transition active:scale-95 cursor-pointer shadow-md"
+              className="w-full h-13 flex items-center justify-center gap-2 bg-[#1F2833] active:bg-[#2C3540] disabled:opacity-30 disabled:cursor-not-allowed border border-[#2C3540] rounded-xl text-white font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
             >
-              <CreditCard size={20} className="text-[#C5A059]" />
-              <span>Tarjeta</span>
+              <CreditCard size={17} className="text-[#C5A059]" />
+              <span>Cobrar con Tarjeta</span>
             </button>
 
             <button
               onClick={() => ejecutarCobro("efectivo")}
               disabled={ticketItems.length === 0}
-              className="h-16 w-full flex items-center justify-center gap-2.5 bg-[#C5A059] active:bg-[#D4AF37] disabled:opacity-25 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm tracking-wider uppercase rounded-2xl shadow-[0_6px_20px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
+              className="w-full h-15 flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#C5A059] to-[#D4AF37] active:from-[#9E7D3B] active:to-[#C5A059] disabled:opacity-30 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_6px_22px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
             >
-              <Banknote size={22} />
-              <span>Efectivo</span>
+              <Banknote size={20} />
+              <span>Cobrar en Efectivo (Encaisser)</span>
             </button>
           </div>
         </div>
