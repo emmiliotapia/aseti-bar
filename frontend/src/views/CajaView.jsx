@@ -450,7 +450,6 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               }}
               className="w-full flex items-center justify-between px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#111722] hover:bg-[#182130] text-[#E5E7EB] border border-[#1A2330] transition active:scale-95 cursor-pointer"
             >
-            >
               <div className="flex items-center gap-3.5">
                 <FolderOpen size={18} className="text-[#E9C46A]" />
                 <span>Cuentas Abiertas</span>
