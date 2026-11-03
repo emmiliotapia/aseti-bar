@@ -931,8 +931,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           MODAL DE COBRO INTERACTIVO: CÁLCULO DE PAGO Y CAMBIO
           ======================================================== */}
       {modalCobro && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-lg bg-[#14171E] border border-[#1F2833] rounded-3xl p-7 space-y-6 shadow-2xl">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-[#14171E] border border-[#1F2833] rounded-3xl p-7 space-y-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
               <div>
                 <h3 className="font-['Syne'] font-extrabold text-xl text-white">
@@ -1321,6 +1321,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                   <button
                     key={num}
                     type="button"
+                    data-mesa={num}
                     onClick={() => seleccionarMesaYRecuperar(num)}
                     className={`h-16 rounded-2xl flex flex-col items-center justify-center border font-mono transition cursor-pointer active:scale-95 relative ${
                       modalidad === 'mesa' && mesaSeleccionada === num
@@ -1470,6 +1471,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 {cuentasAbiertas.map(c => (
                   <div
                     key={c.id}
+                    data-cuenta-mesa={c.mesa}
                     onClick={() => abrirCuentaDesdeModal(c)}
                     className="p-4 rounded-2xl bg-[#0B0C10] border border-[#1F2833] hover:border-[#C5A059] transition cursor-pointer active:scale-98 flex items-center justify-between group"
                   >
