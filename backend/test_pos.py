@@ -20,7 +20,8 @@ def test_auth_login_cajero_activo():
     assert data["rol"] == "cajero"
 
 def test_auth_login_bloqueado_sin_asistencia():
-    # Carlos Mesero (activo_hoy=False)
+    # Desactivar asistencia de Carlos para verificar bloqueo estricto
+    client.post("/asistencia/autorizar", json={"usuario_id": 3, "autorizar": False, "autorizado_por": "Admin General"})
     res = client.post("/auth/login", json={"usuario": "carlos", "pin": "1111"})
     assert res.status_code == 403, "Debe estar bloqueado si no tiene asistencia"
 
