@@ -3,15 +3,12 @@ import {
   LayoutDashboard,
   Receipt,
   UtensilsCrossed,
-  Grid,
   Users,
-  UserCheck,
   BarChart3,
   Settings,
   LogOut,
   Search,
   Bell,
-  ChevronDown,
   Trash2,
   Plus,
   Minus,
@@ -20,11 +17,12 @@ import {
   Beer,
   Wine,
   Pizza,
-  Flame,
   Cookie,
   CreditCard,
   Banknote,
-  Edit3
+  Edit3,
+  Shield,
+  Grid
 } from 'lucide-react';
 
 const CATEGORIAS_CONFIG = [
@@ -37,112 +35,30 @@ const CATEGORIAS_CONFIG = [
 ];
 
 const PRODUCTOS_CATALOGO = [
-  {
-    id: 1,
-    nombre: "Corona Extra 355ml",
-    precio: 48.0,
-    categoria: "Cervezas",
-    emoji: "🍺",
-    desc: "Cerveza clara bien fría"
-  },
-  {
-    id: 2,
-    nombre: "Victoria Clara 355ml",
-    precio: 48.0,
-    categoria: "Cervezas",
-    emoji: "🍻",
-    desc: "Sabor tradicional de malta"
-  },
-  {
-    id: 3,
-    nombre: "Tequila Dobel Diamante",
-    precio: 140.0,
-    categoria: "Destilados",
-    emoji: "🥃",
-    desc: "Copa servida o en las rocas"
-  },
-  {
-    id: 4,
-    nombre: "Mezcal 400 Conejos Joven",
-    precio: 130.0,
-    categoria: "Destilados",
-    emoji: "🍹",
-    desc: "Con naranja y sal de gusano"
-  },
-  {
-    id: 5,
-    nombre: "Burger Doble ASETI",
-    precio: 155.0,
-    categoria: "Cocina",
-    emoji: "🍔",
-    desc: "200g res, queso cheddar fundido"
-  },
-  {
-    id: 6,
-    nombre: "Papas Gajo Trufadas",
-    precio: 75.0,
-    categoria: "Cocina",
-    emoji: "🍟",
-    desc: "Con parmesano y alioli artesanal"
-  },
-  {
-    id: 7,
-    nombre: "Pizza Pepperoni Artesanal",
-    precio: 165.0,
-    categoria: "Cocina",
-    emoji: "🍕",
-    desc: "Masa madre y mozzarella fresca"
-  },
-  {
-    id: 8,
-    nombre: "Alitas Hot BBQ (8 pzas)",
-    precio: 140.0,
-    categoria: "Cocina",
-    emoji: "🍗",
-    desc: "Bañadas en salsa casera ahumada"
-  },
-  {
-    id: 9,
-    nombre: "Nachos Arrachera Grill",
-    precio: 135.0,
-    categoria: "Snacks",
-    emoji: "🧀",
-    desc: "Totopos, guacamole y queso cheddar"
-  },
-  {
-    id: 10,
-    nombre: "Whisky JW Black Label",
-    precio: 165.0,
-    categoria: "Destilados",
-    emoji: "🥃",
-    desc: "Copa doble con hielo premium"
-  },
-  {
-    id: 11,
-    nombre: "Gin Hendrick's Botanic",
-    precio: 155.0,
-    categoria: "Destilados",
-    emoji: "🍸",
-    desc: "Con tónica y pepino fresco"
-  },
-  {
-    id: 12,
-    nombre: "Agua Mineral Topo Chico",
-    precio: 40.0,
-    categoria: "Sin Alcohol",
-    emoji: "🥤",
-    desc: "Vidrio 355ml extra con gas"
-  },
+  { id: 1, nombre: "Corona Extra 355ml", precio: 48.0, categoria: "Cervezas", emoji: "🍺", desc: "Cerveza clara bien fría" },
+  { id: 2, nombre: "Victoria Clara 355ml", precio: 48.0, categoria: "Cervezas", emoji: "🍻", desc: "Sabor tradicional de malta" },
+  { id: 3, nombre: "Tequila Dobel Diamante", precio: 140.0, categoria: "Destilados", emoji: "🥃", desc: "Copa servida o en las rocas" },
+  { id: 4, nombre: "Mezcal 400 Conejos Joven", precio: 130.0, categoria: "Destilados", emoji: "🍹", desc: "Con naranja y sal de gusano" },
+  { id: 5, nombre: "Burger Doble ASETI", precio: 155.0, categoria: "Cocina", emoji: "🍔", desc: "200g res, queso cheddar fundido" },
+  { id: 6, nombre: "Papas Gajo Trufadas", precio: 75.0, categoria: "Cocina", emoji: "🍟", desc: "Con parmesano y alioli artesanal" },
+  { id: 7, nombre: "Pizza Pepperoni Artesanal", precio: 165.0, categoria: "Cocina", emoji: "🍕", desc: "Masa madre y mozzarella fresca" },
+  { id: 8, nombre: "Alitas Hot BBQ (8 pzas)", precio: 140.0, categoria: "Cocina", emoji: "🍗", desc: "Bañadas en salsa casera ahumada" },
+  { id: 9, nombre: "Nachos Arrachera Grill", precio: 135.0, categoria: "Snacks", emoji: "🧀", desc: "Totopos, guacamole y queso cheddar" },
+  { id: 10, nombre: "Whisky JW Black Label", precio: 165.0, categoria: "Destilados", emoji: "🥃", desc: "Copa doble con hielo premium" },
+  { id: 11, nombre: "Gin Hendrick's Botanic", precio: 155.0, categoria: "Destilados", emoji: "🍸", desc: "Con tónica y pepino fresco" },
+  { id: 12, nombre: "Agua Mineral Topo Chico", precio: 40.0, categoria: "Sin Alcohol", emoji: "🥤", desc: "Vidrio 355ml extra con gas" },
 ];
 
-export default function CajaView({ onSwitchToAdmin }) {
+export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [ticketItems, setTicketItems] = useState([]);
   const [categoriaActiva, setCategoriaActiva] = useState('Todos');
-  const [modalidad, setModalidad] = useState('barra'); // 'barra' | 'mesa' | 'llevar'
+  const [modalidad, setModalidad] = useState('barra');
   const [mesaSeleccionada, setMesaSeleccionada] = useState(12);
   const [busqueda, setBusqueda] = useState('');
   const [cobroExitoso, setCobroExitoso] = useState(false);
   const [notaOrden, setNotaOrden] = useState('');
+
+  const esAdmin = usuario?.rol === 'admin';
 
   const agregarProducto = (producto) => {
     setTicketItems(prev => {
@@ -187,9 +103,7 @@ export default function CajaView({ onSwitchToAdmin }) {
   return (
     <div className="flex h-screen w-screen bg-[#0B0C10] text-[#C5C6C7] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
       
-      {/* ========================================================
-          1. SIDEBAR LATERAL ULTRA-FINO (ESTILO MODERNO)
-          ======================================================== */}
+      {/* 1. SIDEBAR LATERAL: LIMITADO PARA CAJERO, COMPLETO PARA ADMIN */}
       <aside className="w-64 bg-[#14171E] border-r border-[#1F2833] flex flex-col justify-between p-4 shrink-0">
         <div className="space-y-6">
           {/* Logo ASETI BAR */}
@@ -202,80 +116,92 @@ export default function CajaView({ onSwitchToAdmin }) {
                 ASETI <span className="text-[#C5A059]">BAR</span>
               </h1>
               <p className="text-[10px] font-['JetBrains_Mono'] tracking-widest text-[#8E9297] uppercase">
-                Obsidian POS v1.0
+                {esAdmin ? 'Modo Administrador' : 'Modo Caja Activa'}
               </p>
             </div>
           </div>
 
           {/* Menú de Navegación Vertical */}
           <nav className="space-y-1.5" aria-label="Navegación principal">
+            {/* El Cajero SOLO ve Punto de Venta */}
             <button
-              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)] transition-all active:scale-95 cursor-pointer"
+              className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)] transition-all active:scale-95 cursor-pointer"
             >
               <LayoutDashboard size={18} />
               <span>Punto de Venta</span>
             </button>
 
-            <button
-              onClick={onSwitchToAdmin}
-              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
-            >
-              <Receipt size={18} />
-              <span>Cortes de Turno</span>
-            </button>
+            {/* Opciones Visibles ÚNICAMENTE para Admin */}
+            {esAdmin && (
+              <>
+                <div className="pt-3 pb-1 px-3 text-[10px] font-mono uppercase tracking-widest text-[#8E9297] border-t border-[#1F2833]">
+                  Panel Admin
+                </div>
 
-            <button
-              onClick={onSwitchToAdmin}
-              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
-            >
-              <UtensilsCrossed size={18} />
-              <span>Catálogo & Menú</span>
-            </button>
+                <button
+                  onClick={() => onSwitchToAdmin('corte')}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                >
+                  <Receipt size={18} />
+                  <span>Cortes X & Z</span>
+                </button>
 
-            <button
-              onClick={onSwitchToAdmin}
-              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
-            >
-              <Users size={18} />
-              <span>Cajeros y Roles</span>
-            </button>
+                <button
+                  onClick={() => onSwitchToAdmin('catalogo')}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                >
+                  <UtensilsCrossed size={18} />
+                  <span>Catálogo & Menú</span>
+                </button>
 
-            <button
-              onClick={onSwitchToAdmin}
-              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
-            >
-              <BarChart3 size={18} />
-              <span>Reportes</span>
-            </button>
+                <button
+                  onClick={() => onSwitchToAdmin('cajeros')}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                >
+                  <Users size={18} />
+                  <span>Gestión de Cajeros</span>
+                </button>
 
-            <button
-              onClick={onSwitchToAdmin}
-              className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
-            >
-              <Settings size={18} />
-              <span>Configuración</span>
-            </button>
+                <button
+                  onClick={() => onSwitchToAdmin('configuracion')}
+                  className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#8E9297] hover:bg-[#1F2833] hover:text-white transition-all active:scale-95 cursor-pointer"
+                >
+                  <Settings size={18} />
+                  <span>Configuración</span>
+                </button>
+              </>
+            )}
           </nav>
         </div>
 
-        {/* Cierre de Sesión / Turno */}
-        <button
-          onClick={onSwitchToAdmin}
-          className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider text-red-400/80 hover:text-red-400 hover:bg-red-950/20 rounded-xl border border-transparent hover:border-red-900/30 transition active:scale-95 cursor-pointer"
-        >
-          <LogOut size={18} />
-          <span>Cerrar Sesión</span>
-        </button>
+        {/* Footer del Sidebar: Botón Salir / Cambiar PIN */}
+        <div className="space-y-2">
+          {/* Si es cajero pero necesita soporte de admin, puede solicitar acceso */}
+          {!esAdmin && (
+            <button
+              onClick={() => onLogout()}
+              className="w-full flex items-center justify-center gap-2 px-3 py-2 text-[11px] font-bold uppercase tracking-wider text-[#C5A059] bg-[#C5A059]/10 hover:bg-[#C5A059]/20 rounded-xl border border-[#C5A059]/30 transition active:scale-95 cursor-pointer"
+            >
+              <Shield size={14} />
+              <span>Acceso Administrador</span>
+            </button>
+          )}
+
+          <button
+            onClick={onLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider text-red-400/90 hover:text-red-400 hover:bg-red-950/20 rounded-xl border border-transparent hover:border-red-900/30 transition active:scale-95 cursor-pointer"
+          >
+            <LogOut size={18} />
+            <span>Cerrar Turno / Salir</span>
+          </button>
+        </div>
       </aside>
 
-      {/* ========================================================
-          2. CONTENIDO PRINCIPAL (HEADER + CATEGORÍAS + GRID PRODUCTOS)
-          ======================================================== */}
+      {/* 2. CONTENIDO PRINCIPAL */}
       <section className="flex-1 flex flex-col min-w-0 bg-[#0B0C10] border-r border-[#1F2833]">
         
-        {/* Header Superior: Buscador y Perfil */}
+        {/* Header Superior */}
         <header className="h-20 px-8 bg-[#14171E] border-b border-[#1F2833] flex items-center justify-between gap-6 shrink-0">
-          {/* Barra de Búsqueda Táctil */}
           <div className="relative flex-1 max-w-md">
             <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8E9297]" />
             <input
@@ -287,7 +213,6 @@ export default function CajaView({ onSwitchToAdmin }) {
             />
           </div>
 
-          {/* Notificaciones y Perfil de Usuario */}
           <div className="flex items-center gap-4">
             <button
               aria-label="Notificaciones del sistema"
@@ -296,22 +221,27 @@ export default function CajaView({ onSwitchToAdmin }) {
               <Bell size={18} />
             </button>
 
+            {/* Usuario Actual */}
             <div className="flex items-center gap-3 pl-2 border-l border-[#1F2833]">
-              <div className="w-11 h-11 rounded-2xl bg-[#1F2833] border border-[#C5A059]/40 flex items-center justify-center text-white font-['Syne'] font-extrabold text-sm">
-                ET
+              <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-['Syne'] font-extrabold text-sm ${
+                esAdmin ? 'bg-amber-950/40 border-amber-500/50 text-amber-400' : 'bg-[#1F2833] border-[#C5A059]/40'
+              }`}>
+                {usuario?.nombre ? usuario.nombre.substring(0, 2).toUpperCase() : 'US'}
               </div>
               <div className="text-left">
-                <div className="text-xs font-bold text-white leading-tight">Emilio Tapia</div>
-                <div className="text-[10px] font-['JetBrains_Mono'] text-[#C5A059] uppercase tracking-wider font-semibold">Cajero Líder</div>
+                <div className="text-xs font-bold text-white leading-tight">{usuario?.nombre || 'Cajero de Barra'}</div>
+                <div className={`text-[10px] font-['JetBrains_Mono'] uppercase tracking-wider font-semibold ${
+                  esAdmin ? 'text-amber-400' : 'text-[#C5A059]'
+                }`}>
+                  {usuario?.cargo || (esAdmin ? 'Administrador' : 'Cajero Activo')}
+                </div>
               </div>
             </div>
           </div>
         </header>
 
-        {/* Scrollable Container para Catálogo */}
+        {/* Categorías y Grid */}
         <div className="flex-1 overflow-y-auto p-8 space-y-7">
-          
-          {/* Selector de Categorías con Iconos (Como en el Diseño de Referencia) */}
           <div className="space-y-3">
             <h2 className="font-['Syne'] font-bold text-base text-white tracking-wide">
               Categorías
@@ -341,7 +271,6 @@ export default function CajaView({ onSwitchToAdmin }) {
             </div>
           </div>
 
-          {/* Grid de Productos Tipo Card Táctil con Botón Integrado */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h2 className="font-['Syne'] font-bold text-base text-white tracking-wide">
@@ -358,12 +287,10 @@ export default function CajaView({ onSwitchToAdmin }) {
                   key={prod.id}
                   className="p-4 rounded-2xl bg-[#14171E] border border-[#1F2833] flex flex-col justify-between gap-3 shadow-lg hover:border-[#C5A059]/40 transition-all"
                 >
-                  {/* Imagen / Emoji Representativo */}
                   <div className="h-28 w-full rounded-xl bg-gradient-to-br from-[#1F2833]/80 to-[#0B0C10] border border-[#1F2833] flex items-center justify-center text-4xl shadow-inner">
                     <span>{prod.emoji}</span>
                   </div>
 
-                  {/* Información */}
                   <div className="space-y-1 text-center">
                     <h3 className="font-bold text-sm text-white line-clamp-1">{prod.nombre}</h3>
                     <p className="text-[11px] text-[#8E9297] line-clamp-1">{prod.desc}</p>
@@ -372,7 +299,6 @@ export default function CajaView({ onSwitchToAdmin }) {
                     </div>
                   </div>
 
-                  {/* Botón Táctil de Agregar (Estilo + Ajouter del mockup) */}
                   <button
                     onClick={() => agregarProducto(prod)}
                     className="w-full h-11 flex items-center justify-center gap-1.5 bg-[#C5A059] active:bg-[#D4AF37] text-[#0B0C10] font-black text-xs tracking-wider uppercase rounded-xl shadow-[0_4px_14px_rgba(197,160,89,0.2)] transition active:scale-95 cursor-pointer"
@@ -387,12 +313,8 @@ export default function CajaView({ onSwitchToAdmin }) {
         </div>
       </section>
 
-      {/* ========================================================
-          3. PANEL LATERAL DERECHO: TICKET / COMMANDE EN COURS
-          ======================================================== */}
+      {/* 3. TICKET / COMANDA */}
       <aside className="w-[420px] bg-[#14171E] flex flex-col h-full shrink-0 border-l border-[#1F2833]">
-        
-        {/* Cabecera del Pedido */}
         <div className="p-6 border-b border-[#1F2833] space-y-4 shrink-0 bg-[#1F2833]/20">
           <div className="flex items-center justify-between">
             <div>
@@ -410,21 +332,17 @@ export default function CajaView({ onSwitchToAdmin }) {
                 onClick={limpiarTicket}
                 aria-label="Vaciar comanda"
                 className="p-2.5 rounded-xl bg-red-950/20 active:bg-red-900/40 border border-red-900/40 text-red-400 transition active:scale-95 cursor-pointer"
-                title="Limpiar todo"
               >
                 <Trash2 size={16} />
               </button>
             )}
           </div>
 
-          {/* Selector de Modalidad (En Sala / Para Llevar / Domicilio) */}
           <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#0B0C10] rounded-xl border border-[#1F2833]">
             <button
               onClick={() => setModalidad('mesa')}
               className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
-                modalidad === 'mesa'
-                  ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]'
-                  : 'text-[#8E9297] hover:text-white'
+                modalidad === 'mesa' ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]' : 'text-[#8E9297]'
               }`}
             >
               En Mesa
@@ -432,9 +350,7 @@ export default function CajaView({ onSwitchToAdmin }) {
             <button
               onClick={() => setModalidad('barra')}
               className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
-                modalidad === 'barra'
-                  ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]'
-                  : 'text-[#8E9297] hover:text-white'
+                modalidad === 'barra' ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]' : 'text-[#8E9297]'
               }`}
             >
               En Barra
@@ -442,9 +358,7 @@ export default function CajaView({ onSwitchToAdmin }) {
             <button
               onClick={() => setModalidad('llevar')}
               className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
-                modalidad === 'llevar'
-                  ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]'
-                  : 'text-[#8E9297] hover:text-white'
+                modalidad === 'llevar' ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]' : 'text-[#8E9297]'
               }`}
             >
               Para Llevar
@@ -452,7 +366,6 @@ export default function CajaView({ onSwitchToAdmin }) {
           </div>
         </div>
 
-        {/* Lista de Partidas Seleccionadas */}
         <div className="flex-1 overflow-y-auto p-5 space-y-3">
           {ticketItems.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-[#8E9297] space-y-2 opacity-60">
@@ -476,7 +389,6 @@ export default function CajaView({ onSwitchToAdmin }) {
                   </div>
                 </div>
 
-                {/* Controles de Cantidad */}
                 <div className="flex items-center gap-1 bg-[#14171E] p-1 rounded-lg border border-[#1F2833]">
                   <button
                     onClick={() => modificarCantidad(item.id, -1)}
@@ -505,10 +417,7 @@ export default function CajaView({ onSwitchToAdmin }) {
           )}
         </div>
 
-        {/* Sección de Resumen y Acciones Finales */}
         <div className="p-6 bg-[#0B0C10] border-t border-[#1F2833] space-y-4 shrink-0">
-          
-          {/* Nota opcional para cocina/barra */}
           <div className="flex items-center gap-2 px-3 py-2 bg-[#14171E] rounded-xl border border-[#1F2833]">
             <Edit3 size={14} className="text-[#8E9297]" />
             <input
@@ -520,7 +429,6 @@ export default function CajaView({ onSwitchToAdmin }) {
             />
           </div>
 
-          {/* Desglose Matemático */}
           <div className="space-y-1.5 text-xs text-[#8E9297] pt-1">
             <div className="flex justify-between">
               <span>Subtotal</span>
@@ -538,7 +446,6 @@ export default function CajaView({ onSwitchToAdmin }) {
             </div>
           </div>
 
-          {/* Feedback de Cobro */}
           {cobroExitoso && (
             <div className="flex items-center justify-center gap-2 p-2.5 bg-emerald-950/40 border border-emerald-500/50 rounded-xl text-emerald-400 font-bold text-xs animate-pulse">
               <CheckCircle2 size={16} />
@@ -546,7 +453,6 @@ export default function CajaView({ onSwitchToAdmin }) {
             </div>
           )}
 
-          {/* Botones de Acción (Enregistrer / Encaisser adaptados a Obsidian & Gold) */}
           <div className="space-y-2.5 pt-1">
             <button
               onClick={() => ejecutarCobro("tarjeta")}
@@ -563,7 +469,7 @@ export default function CajaView({ onSwitchToAdmin }) {
               className="w-full h-15 flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#C5A059] to-[#D4AF37] active:from-[#9E7D3B] active:to-[#C5A059] disabled:opacity-30 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_6px_22px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
             >
               <Banknote size={20} />
-              <span>Cobrar en Efectivo (Encaisser)</span>
+              <span>Cobrar en Efectivo</span>
             </button>
           </div>
         </div>
