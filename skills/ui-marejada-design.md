@@ -37,7 +37,8 @@ Actúa como el Lead Designer y Director de Marca de **MAREJADA – Café, Cocina
 
 ## 4. Branding en Tickets y Encabezados
 - **Nombre comercial:** MAREJADA – Café, Cocina, Bar.
-- **Logotipo:** `/logo.jpeg` presente en cabecera de sidebar, pantalla de login y pie de tickets.
+- **Logotipo Principal (UI/POS):** `/logo-pos-blanco.png` generado físicamente en formato horizontal con trazos blancos nítidos y fondo transparente (ver especificación completa en `skills/logo-processing-rules.md`).
+- **Logotipo Original:** `/logo.jpeg` conservado para impresiones y tickets térmicos.
 - **Lema / Pie de Ticket:** *"Sabor a mar, fuego y café. ¡Gracias por compartir la marea con nosotros!"*
 
 ---
