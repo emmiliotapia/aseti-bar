@@ -253,8 +253,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
       <aside className="w-64 bg-[#142430] border-r border-[#264653] flex flex-col justify-between p-4 shrink-0">
         <div className="space-y-6">
           <div className="flex items-center gap-3 px-2 py-2">
-            <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#E9C46A]/50 bg-[#0C1821] flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(233,196,106,0.2)]">
-              <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
+            <div className="w-12 h-12 rounded-2xl overflow-hidden border border-[#E9C46A]/60 bg-[#F4EBD9] p-1 flex items-center justify-center shrink-0 shadow-[0_0_18px_rgba(233,196,106,0.25)]">
+              <img src="/logo-badge.png" alt="Logo" className="w-full h-full object-contain" />
             </div>
             <div>
               <h1 className="font-['Syne'] font-extrabold text-base tracking-wider text-white leading-tight">

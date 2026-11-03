@@ -65,16 +65,21 @@ export default function LoginPinView({ onLoginSuccess }) {
 
       <div className="w-full max-w-sm bg-[#142430] border border-[#264653] rounded-3xl p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4">
         
-        <div className="flex flex-col items-center space-y-1.5 text-center">
-          <div className="w-16 h-16 rounded-2xl overflow-hidden border-2 border-[#E9C46A]/50 shadow-[0_0_20px_rgba(233,196,106,0.25)] bg-[#0C1821] flex items-center justify-center">
-            <img src="/logo.jpeg" alt="Marejada Logo" className="w-full h-full object-cover" />
+        <div className="flex flex-col items-center space-y-2 text-center">
+          <div className="relative group">
+            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#E9C46A]/60 shadow-[0_0_25px_rgba(233,196,106,0.3)] bg-[#F4EBD9] p-1.5 flex items-center justify-center transition-transform hover:scale-105">
+              <img src="/logo-badge.png" alt="Marejada Logo" className="w-full h-full object-contain" />
+            </div>
+            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#E9C46A]/20 to-[#E76F51]/20 -z-10 blur-sm"></div>
           </div>
-          <h1 className="font-['Syne'] font-extrabold text-2xl text-white tracking-wider pt-1">
-            MAREJADA
-          </h1>
-          <p className="text-[10px] font-['JetBrains_Mono'] tracking-widest text-[#E9C46A] uppercase font-bold">
-            Café • Cocina • Bar
-          </p>
+          <div>
+            <h1 className="font-['Syne'] font-black text-2xl text-white tracking-widest leading-none">
+              MAREJADA
+            </h1>
+            <p className="text-[10px] font-['JetBrains_Mono'] tracking-[0.25em] text-[#E9C46A] uppercase font-bold mt-1">
+              Café • Cocina • Bar
+            </p>
+          </div>
         </div>
 
         {/* Campo para Escribir el Usuario */}
