@@ -247,21 +247,21 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-[#0B0C10] text-[#C5C6C7] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
+    <div className="flex h-screen w-screen bg-[#0C1821] text-[#F4EBD9] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
       
       {/* SIDEBAR ADMIN */}
-      <aside className="w-64 bg-[#14171E] border-r border-[#1F2833] flex flex-col justify-between p-4 shrink-0">
+      <aside className="w-64 bg-[#142430] border-r border-[#264653] flex flex-col justify-between p-4 shrink-0">
         <div className="space-y-6">
-          <div className="flex items-center gap-3 px-3 py-2">
-            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-[#D4AF37] to-[#9E7D3B] flex items-center justify-center text-[#0B0C10] font-black font-['Syne'] text-lg shadow-[0_0_15px_rgba(197,160,89,0.3)]">
-              A
+          <div className="flex items-center gap-3 px-2 py-2">
+            <div className="w-11 h-11 rounded-xl overflow-hidden border border-[#E9C46A]/50 bg-[#0C1821] flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(233,196,106,0.2)]">
+              <img src="/logo.jpeg" alt="Logo" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h1 className="font-['Syne'] font-extrabold text-base tracking-wider text-white">
-                ADMIN <span className="text-[#C5A059]">PANEL</span>
+              <h1 className="font-['Syne'] font-extrabold text-base tracking-wider text-white leading-tight">
+                MAREJADA
               </h1>
-              <p className="text-[10px] font-mono tracking-widest text-[#8E9297] uppercase">
-                Control y Gestión
+              <p className="text-[10px] font-mono tracking-widest text-[#E9C46A] uppercase font-bold">
+                Admin Panel
               </p>
             </div>
           </div>
@@ -271,8 +271,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
               onClick={() => setTabActiva('asistencia')}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'asistencia'
-                  ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
-                  : 'text-[#8E9297] hover:bg-[#1F2833] hover:text-white'
+                  ? 'bg-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.25)] font-black'
+                  : 'text-[#93A8AC] hover:bg-[#1B3B4B] hover:text-white'
               }`}
             >
               <Clock size={18} />
@@ -283,8 +283,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
               onClick={() => setTabActiva('catalogo')}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'catalogo'
-                  ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
-                  : 'text-[#8E9297] hover:bg-[#1F2833] hover:text-white'
+                  ? 'bg-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.25)] font-black'
+                  : 'text-[#93A8AC] hover:bg-[#1B3B4B] hover:text-white'
               }`}
             >
               <UtensilsCrossed size={18} />
@@ -295,8 +295,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
               onClick={() => { setTabActiva('corte'); cargarCorteActual(); }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'corte'
-                  ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
-                  : 'text-[#8E9297] hover:bg-[#1F2833] hover:text-white'
+                  ? 'bg-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.25)] font-black'
+                  : 'text-[#93A8AC] hover:bg-[#1B3B4B] hover:text-white'
               }`}
             >
               <Receipt size={18} />

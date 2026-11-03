@@ -39,3 +39,11 @@ Actúa como el Lead Designer y Director de Marca de **MAREJADA – Café, Cocina
 - **Nombre comercial:** MAREJADA – Café, Cocina, Bar.
 - **Logotipo:** `/logo.jpeg` presente en cabecera de sidebar, pantalla de login y pie de tickets.
 - **Lema / Pie de Ticket:** *"Sabor a mar, fuego y café. ¡Gracias por compartir la marea con nosotros!"*
+
+---
+
+## 5. Mockup / Propuesta Visual de Redes Sociales
+- Se generó la propuesta fotográfica lifestyle para Instagram: [`marejada_social_post.jpg`](file:///c:/Users/Administrador/Desktop/3.%20Trabajo/ASETI/POS%20BAR/marejada_social_post.jpg)
+- Muestra la transición armoniosa entre mañana y noche: café de especialidad en cerámica artesanal moteada, pan de masa madre, cocina de mar a la parrilla servida en barro/terracota y coctelería botánica frente a la brisa del océano con luz dorada de atardecer.
+
+
