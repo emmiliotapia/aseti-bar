@@ -69,7 +69,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const verificarTurno = async () => {
     try {
       const t = await api.getTurnoActivo();
-      if (!t && !esAdmin) {
+      if (!t) {
+        // Tanto admin como cajero ven el modal si no hay turno abierto
         setModalFondo(true);
       } else {
         setTurnoActivo(t);
@@ -264,12 +265,16 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B0C10] border border-[#1F2833] text-xs font-mono">
+            <button
+              onClick={() => setModalFondo(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[#0B0C10] hover:bg-[#1F2833] border border-[#1F2833] text-xs font-mono transition cursor-pointer active:scale-95"
+              title="Abrir o consultar turno"
+            >
               <span className="text-[#8E9297]">Turno:</span>
               <span className="font-bold text-[#C5A059]">
-                {turnoActivo ? `#${turnoActivo.id} ($${turnoActivo.fondo_inicial})` : 'Sin abrir'}
+                {turnoActivo ? `#${turnoActivo.id} ($${turnoActivo.fondo_inicial})` : '⚠️ Abrir Turno'}
               </span>
-            </div>
+            </button>
 
             <div className="flex items-center gap-3 pl-2 border-l border-[#1F2833]">
               <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-['Syne'] font-extrabold text-sm ${
@@ -533,37 +538,62 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
       {/* MODAL INICIO DE TURNO (FONDO INICIAL DE CAJA) */}
       {modalFondo && (
         <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
+          <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl relative">
+            {turnoActivo && (
+              <button
+                onClick={() => setModalFondo(false)}
+                className="absolute top-4 right-4 text-[#8E9297] hover:text-white"
+              >
+                ✕
+              </button>
+            )}
+
             <div className="text-center space-y-1">
               <div className="w-12 h-12 mx-auto rounded-2xl bg-[#C5A059]/20 border border-[#C5A059]/40 flex items-center justify-center text-[#C5A059]">
                 <DollarSign size={24} />
               </div>
-              <h3 className="font-['Syne'] font-extrabold text-xl text-white pt-2">Apertura de Turno</h3>
+              <h3 className="font-['Syne'] font-extrabold text-xl text-white pt-2">
+                {turnoActivo ? `Turno #${turnoActivo.id} Activo` : 'Apertura de Turno'}
+              </h3>
               <p className="text-xs text-[#8E9297]">
-                Ingresa el fondo inicial de efectivo en caja para comenzar
+                {turnoActivo 
+                  ? `Turno abierto por ${turnoActivo.usuario_nombre} con fondo de $${turnoActivo.fondo_inicial.toFixed(2)}`
+                  : 'Ingresa el fondo inicial de efectivo en caja para comenzar a cobrar'}
               </p>
             </div>
 
-            <form onSubmit={iniciarTurnoConFondo} className="space-y-4">
-              <div>
-                <label className="text-[11px] font-mono uppercase text-[#8E9297] block mb-1">Monto en Efectivo ($)</label>
-                <input
-                  type="number"
-                  step="50"
-                  required
-                  value={fondoInput}
-                  onChange={e => setFondoInput(e.target.value)}
-                  className="w-full bg-[#0B0C10] border border-[#1F2833] rounded-xl p-3 text-white text-lg font-mono font-bold text-center outline-none focus:border-[#C5A059]"
-                />
-              </div>
+            {!turnoActivo ? (
+              <form onSubmit={iniciarTurnoConFondo} className="space-y-4">
+                <div>
+                  <label className="text-[11px] font-mono uppercase text-[#8E9297] block mb-1">Fondo de Caja ($)</label>
+                  <input
+                    type="number"
+                    step="50"
+                    required
+                    value={fondoInput}
+                    onChange={e => setFondoInput(e.target.value)}
+                    placeholder="1000"
+                    className="w-full bg-[#0B0C10] border border-[#1F2833] rounded-xl p-3 text-white text-2xl font-mono font-bold text-center outline-none focus:border-[#C5A059]"
+                  />
+                </div>
 
-              <button
-                type="submit"
-                className="w-full h-12 bg-[#C5A059] active:bg-[#D4AF37] text-[#0B0C10] font-black text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer active:scale-95"
-              >
-                Abrir Turno y Empezar
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  className="w-full h-13 bg-[#C5A059] active:bg-[#D4AF37] text-[#0B0C10] font-black text-xs uppercase tracking-wider rounded-xl shadow-lg cursor-pointer active:scale-95 transition"
+                >
+                  Abrir Turno y Empezar
+                </button>
+              </form>
+            ) : (
+              <div className="pt-2">
+                <button
+                  onClick={() => setModalFondo(false)}
+                  className="w-full h-11 bg-[#1F2833] hover:bg-[#2C3540] text-white font-bold text-xs uppercase tracking-wider rounded-xl transition cursor-pointer"
+                >
+                  Continuar Cobrando
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
