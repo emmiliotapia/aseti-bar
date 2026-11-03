@@ -20,5 +20,7 @@
 - [x] Selector táctil de billetes rápidos y cálculo de cambio al cliente.
 - [x] Teclado numérico táctil en pantalla integrado en el modal de cobro (1-9, C, 0, ⌫).
 - [x] Cotejo de pago con tarjeta requiriendo los últimos 4 dígitos y campo opcional de autorización/voucher.
-- [x] Vista previa estilizada de ticket físico térmico tras completar la venta con desglose de tarjeta (•••• 1234) o desglose de efectivo y cambio devuelto.
+- [x] Asignación táctil e interactiva de Mesa (Matriz 1-16, Barra, Para Llevar) y Mesero responsable por comanda.
+- [x] Vista previa estilizada de ticket físico térmico tras completar la venta con desglose de mesa, mesero, cajero, tarjeta o efectivo y cambio.
+- [x] Suite de pruebas automatizadas en backend con Pytest (`test_pos.py`).
 - [x] Commit y push a GitHub.

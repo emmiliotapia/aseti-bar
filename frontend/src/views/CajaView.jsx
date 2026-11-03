@@ -23,7 +23,8 @@ import {
   Shield,
   Grid,
   Loader2,
-  DollarSign
+  DollarSign,
+  UserCheck
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -41,7 +42,11 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [ticketItems, setTicketItems] = useState([]);
   const [categoriaActiva, setCategoriaActiva] = useState('Todos');
   const [modalidad, setModalidad] = useState('barra');
-  const [mesaSeleccionada, setMesaSeleccionada] = useState(12);
+  const [mesaSeleccionada, setMesaSeleccionada] = useState(1);
+  const [meseroSeleccionado, setMeseroSeleccionado] = useState(usuario?.nombre || 'General');
+  const [usuariosPersonal, setUsuariosPersonal] = useState([]);
+  const [modalMesas, setModalMesas] = useState(false);
+  const [modalMeseros, setModalMeseros] = useState(false);
   const [busqueda, setBusqueda] = useState('');
   const [cobrando, setCobrando] = useState(false);
   const [cobroExitoso, setCobroExitoso] = useState(false);
@@ -65,10 +70,14 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const cargarCatalogo = async () => {
     try {
       setCargando(true);
-      const data = await api.getProductos();
-      setProductos(data);
+      const [prodsData, usrsData] = await Promise.all([
+        api.getProductos(),
+        api.getUsuarios().catch(() => [])
+      ]);
+      setProductos(prodsData);
+      setUsuariosPersonal(usrsData);
     } catch (err) {
-      console.error("Error al cargar productos", err);
+      console.error("Error al cargar productos o usuarios", err);
     } finally {
       setCargando(false);
     }
@@ -187,7 +196,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
       const payload = {
         total,
         metodo_pago: metodoSeleccionado,
-        cajero_id: usuario?.nombre || "Cajero",
+        cajero_id: meseroSeleccionado || usuario?.nombre || "Cajero",
         turno_id: turnoActivo?.id || null,
         partidas: ticketItems.map(item => ({
           producto_id: item.id,
@@ -208,8 +217,10 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         cambio: cambioCalculado,
         metodo: metodoSeleccionado,
         cajero: usuario?.nombre || "Cajero",
+        mesero: meseroSeleccionado,
+        modalidad,
         fecha: new Date().toLocaleTimeString(),
-        mesa: mesaSeleccionada,
+        mesa: modalidad === 'barra' ? 'Barra' : (modalidad === 'llevar' ? 'Para Llevar' : `Mesa ${mesaSeleccionada}`),
         nota: notaOrden,
         tarjeta_digitos: metodoSeleccionado === 'tarjeta' ? ultimosDigitosTarjeta : null,
         autorizacion: metodoSeleccionado === 'tarjeta' ? numAutorizacion : null
@@ -459,8 +470,10 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 Comanda en Curso
               </h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className="font-mono text-xs font-bold text-[#C5A059]">Mesa {mesaSeleccionada}</span>
-                <span className="text-[#8E9297] text-xs">• Barra Principal</span>
+                <span className="font-mono text-xs font-bold text-[#C5A059]">
+                  {modalidad === 'mesa' ? `Mesa ${mesaSeleccionada}` : modalidad === 'barra' ? 'Barra' : 'Para Llevar'}
+                </span>
+                <span className="text-[#8E9297] text-xs">• {meseroSeleccionado}</span>
               </div>
             </div>
 
@@ -474,9 +487,13 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             )}
           </div>
 
+          {/* Modalidad de Consumo */}
           <div className="grid grid-cols-3 gap-1.5 p-1 bg-[#0B0C10] rounded-xl border border-[#1F2833]">
             <button
-              onClick={() => setModalidad('mesa')}
+              onClick={() => {
+                setModalidad('mesa');
+                setModalMesas(true);
+              }}
               className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
                 modalidad === 'mesa' ? 'bg-[#1F2833] text-white shadow-sm border border-[#2C3540]' : 'text-[#8E9297]'
               }`}
@@ -498,6 +515,37 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               }`}
             >
               Para Llevar
+            </button>
+          </div>
+
+          {/* Botones de Selección Rápida: Mesa y Mesero */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
+            <button
+              type="button"
+              onClick={() => setModalMesas(true)}
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#0B0C10] border border-[#1F2833] hover:border-[#C5A059]/50 transition cursor-pointer text-left active:scale-95"
+            >
+              <div>
+                <span className="text-[10px] uppercase font-mono text-[#8E9297] block leading-none">Mesa</span>
+                <span className="font-['JetBrains_Mono'] text-sm font-black text-white">
+                  {modalidad === 'mesa' ? `#${mesaSeleccionada}` : 'Cambiar'}
+                </span>
+              </div>
+              <Grid size={15} className="text-[#C5A059]" />
+            </button>
+
+            <button
+              type="button"
+              onClick={() => setModalMeseros(true)}
+              className="flex items-center justify-between px-3 py-2.5 rounded-xl bg-[#0B0C10] border border-[#1F2833] hover:border-[#C5A059]/50 transition cursor-pointer text-left active:scale-95"
+            >
+              <div className="truncate mr-1">
+                <span className="text-[10px] uppercase font-mono text-[#8E9297] block leading-none">Mesero</span>
+                <span className="text-xs font-bold text-white truncate block">
+                  {meseroSeleccionado}
+                </span>
+              </div>
+              <UserCheck size={15} className="text-[#C5A059] shrink-0" />
             </button>
           </div>
         </div>
@@ -900,10 +948,10 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               <h4 className="font-extrabold text-xl tracking-tight">ASETI BAR</h4>
               <p className="text-xs text-gray-600">Av. Revolución 450, Barra & Grill</p>
               <div className="text-[11px] text-gray-500 pt-1">
-                Ticket #{ticketFinalizado.id} • Mesa {ticketFinalizado.mesa}
+                Ticket #{ticketFinalizado.id} • {ticketFinalizado.mesa}
               </div>
               <div className="text-[11px] text-gray-500">
-                Atendido por: {ticketFinalizado.cajero}
+                Mesero: <span className="font-bold">{ticketFinalizado.mesero}</span> • Caja: {ticketFinalizado.cajero}
               </div>
             </div>
 
@@ -965,6 +1013,142 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               >
                 Finalizar Venta
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: SELECCIÓN DE MESA (MATRIZ TÁCTIL)
+          ======================================================== */}
+      {modalMesas && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-md bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
+              <div>
+                <h3 className="font-['Syne'] font-extrabold text-xl text-white">
+                  Asignar Mesa
+                </h3>
+                <p className="text-xs text-[#8E9297]">
+                  Selecciona la mesa para esta comanda
+                </p>
+              </div>
+              <button
+                onClick={() => setModalMesas(false)}
+                className="w-8 h-8 rounded-full bg-[#1F2833] text-[#8E9297] hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Matriz de Mesas (1 a 16 + Barra) */}
+            <div className="grid grid-cols-4 gap-2.5 max-h-[360px] overflow-y-auto p-1">
+              {Array.from({ length: 16 }, (_, i) => i + 1).map(num => (
+                <button
+                  key={num}
+                  type="button"
+                  onClick={() => {
+                    setMesaSeleccionada(num);
+                    setModalidad('mesa');
+                    setModalMesas(false);
+                  }}
+                  className={`h-16 rounded-2xl flex flex-col items-center justify-center border font-mono transition cursor-pointer active:scale-95 ${
+                    modalidad === 'mesa' && mesaSeleccionada === num
+                      ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.35)]'
+                      : 'bg-[#0B0C10] border-[#1F2833] text-white hover:border-[#C5A059]/50'
+                  }`}
+                >
+                  <span className="text-[10px] uppercase text-opacity-80">Mesa</span>
+                  <span className="text-xl font-black">{num}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 pt-2 border-t border-[#1F2833]">
+              <button
+                type="button"
+                onClick={() => {
+                  setModalidad('barra');
+                  setModalMesas(false);
+                }}
+                className={`py-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
+                  modalidad === 'barra'
+                    ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10]'
+                    : 'bg-[#1F2833] border-[#2C3540] text-white'
+                }`}
+              >
+                🍸 En Barra
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setModalidad('llevar');
+                  setModalMesas(false);
+                }}
+                className={`py-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
+                  modalidad === 'llevar'
+                    ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10]'
+                    : 'bg-[#1F2833] border-[#2C3540] text-white'
+                }`}
+              >
+                🥡 Para Llevar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: SELECCIÓN DE MESERO / CAJERO RESPONSABLE
+          ======================================================== */}
+      {modalMeseros && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
+              <div>
+                <h3 className="font-['Syne'] font-extrabold text-xl text-white">
+                  Asignar Mesero
+                </h3>
+                <p className="text-xs text-[#8E9297]">
+                  ¿Quién atiende esta orden?
+                </p>
+              </div>
+              <button
+                onClick={() => setModalMeseros(false)}
+                className="w-8 h-8 rounded-full bg-[#1F2833] text-[#8E9297] hover:text-white flex items-center justify-center cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <div className="space-y-2 max-h-72 overflow-y-auto">
+              {usuariosPersonal.map(u => (
+                <button
+                  key={u.id}
+                  type="button"
+                  onClick={() => {
+                    setMeseroSeleccionado(u.nombre);
+                    setModalMeseros(false);
+                  }}
+                  className={`w-full p-3.5 rounded-2xl border flex items-center justify-between transition cursor-pointer active:scale-95 ${
+                    meseroSeleccionado === u.nombre
+                      ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.3)]'
+                      : 'bg-[#0B0C10] border-[#1F2833] text-white hover:border-[#C5A059]/40'
+                  }`}
+                >
+                  <div className="text-left">
+                    <div className="font-bold text-sm">{u.nombre}</div>
+                    <div className={`text-[10px] font-mono uppercase ${
+                      meseroSeleccionado === u.nombre ? 'text-[#0B0C10]/80 font-bold' : 'text-[#8E9297]'
+                    }`}>
+                      {u.cargo || u.rol}
+                    </div>
+                  </div>
+                  {meseroSeleccionado === u.nombre && (
+                    <CheckCircle2 size={18} />
+                  )}
+                </button>
+              ))}
             </div>
           </div>
         </div>
