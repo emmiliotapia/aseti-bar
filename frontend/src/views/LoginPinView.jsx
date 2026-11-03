@@ -60,40 +60,33 @@ export default function LoginPinView({ onLoginSuccess }) {
   ];
 
   return (
-    <div className="w-screen h-screen bg-[#0C1821] text-[#F4EBD9] font-['Plus_Jakarta_Sans'] flex flex-col items-center justify-center p-6 select-none overflow-hidden relative">
-      <div className="absolute top-1/4 w-96 h-96 bg-[#E76F51]/10 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="w-screen h-screen bg-[#070A0E] text-[#E5E7EB] font-['Plus_Jakarta_Sans'] flex flex-col items-center justify-center p-6 select-none overflow-hidden relative">
+      <div className="absolute top-1/4 w-96 h-96 bg-[#E76F51]/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-sm bg-[#142430] border border-[#264653] rounded-3xl p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4">
+      <div className="w-full max-w-sm bg-[#0B0F15] border border-[#1A2330] rounded-3xl p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4">
         
-        <div className="flex flex-col items-center space-y-2 text-center">
-          <div className="relative group">
-            <div className="w-20 h-20 rounded-2xl overflow-hidden border-2 border-[#E9C46A]/60 shadow-[0_0_25px_rgba(233,196,106,0.3)] bg-[#F4EBD9] p-1.5 flex items-center justify-center transition-transform hover:scale-105">
-              <img src="/logo-badge.png" alt="Marejada Logo" className="w-full h-full object-contain" />
-            </div>
-            <div className="absolute -inset-1 rounded-2xl bg-gradient-to-r from-[#E9C46A]/20 to-[#E76F51]/20 -z-10 blur-sm"></div>
-          </div>
-          <div>
-            <h1 className="font-['Syne'] font-black text-2xl text-white tracking-widest leading-none">
-              MAREJADA
-            </h1>
-            <p className="text-[10px] font-['JetBrains_Mono'] tracking-[0.25em] text-[#E9C46A] uppercase font-bold mt-1">
-              Café • Cocina • Bar
-            </p>
+        <div className="flex flex-col items-center space-y-2 text-center w-full">
+          <div className="w-full h-16 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">
+            <img 
+              src="/logo-marejada-pos-trans.png" 
+              alt="MAREJADA – Café, Cocina, Bar" 
+              className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" 
+            />
           </div>
         </div>
 
         {/* Campo para Escribir el Usuario */}
         <div className="w-full space-y-1">
-          <label className="text-[11px] font-mono uppercase text-[#93A8AC] block">Usuario / Mesero</label>
+          <label className="text-[11px] font-mono uppercase text-[#9CA3AF] block">Usuario / Mesero</label>
           <div className="relative">
-            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#93A8AC]" />
+            <User size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7280]" />
             <input
               type="text"
               autoFocus
               value={usuarioInput}
               onChange={(e) => setUsuarioInput(e.target.value)}
               placeholder="Ej. emilio, carlos, admin"
-              className="w-full h-11 pl-10 pr-3 bg-[#0C1821] border border-[#264653] focus:border-[#E76F51] rounded-xl text-xs text-white placeholder-[#93A8AC] outline-none transition"
+              className="w-full h-11 pl-10 pr-3 bg-[#070A0E] border border-[#1A2330] focus:border-[#E76F51] rounded-xl text-xs text-white placeholder-[#6B7280] outline-none transition"
             />
           </div>
         </div>
