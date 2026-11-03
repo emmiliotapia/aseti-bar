@@ -160,6 +160,16 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
     cargarCuentaDeMesa(`Mesa ${num}`);
   };
 
+  const cambiarModalidadYLimpiar = (nuevaModalidad) => {
+    // Al cambiar a barra o para llevar, se limpia la comanda y se aísla la cuenta
+    setModalidad(nuevaModalidad);
+    setTicketItems([]);
+    setNotaOrden('');
+    setCuentaActivaId(null);
+    const nombreCuenta = nuevaModalidad === 'barra' ? 'Barra' : 'Para Llevar';
+    cargarCuentaDeMesa(nombreCuenta);
+  };
+
   const solicitarAutorizacionAdminParaLimpiar = () => {
     if (ticketItems.length === 0) return;
     
@@ -701,7 +711,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               En Mesa
             </button>
             <button
-              onClick={() => setModalidad('barra')}
+              onClick={() => cambiarModalidadYLimpiar('barra')}
               className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
                 modalidad === 'barra' ? 'bg-[#111722] text-white shadow-sm border border-[#1A2330]' : 'text-[#9CA3AF]'
               }`}
@@ -709,7 +719,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               En Barra
             </button>
             <button
-              onClick={() => setModalidad('llevar')}
+              onClick={() => cambiarModalidadYLimpiar('llevar')}
               className={`py-2 text-[11px] font-bold tracking-wider uppercase rounded-lg transition cursor-pointer ${
                 modalidad === 'llevar' ? 'bg-[#111722] text-white shadow-sm border border-[#1A2330]' : 'text-[#9CA3AF]'
               }`}
@@ -1275,7 +1285,12 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             {/* Botón para Cerrar o Mandar a Imprimir */}
             <div className="pt-2 flex gap-2">
               <button
-                onClick={() => setTicketFinalizado(null)}
+                onClick={() => {
+                  setTicketFinalizado(null);
+                  setTicketItems([]);
+                  setNotaOrden('');
+                  setCuentaActivaId(null);
+                }}
                 className="flex-1 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition active:scale-95 cursor-pointer font-sans"
               >
                 Finalizar Venta
@@ -1346,8 +1361,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               <button
                 type="button"
                 onClick={() => {
-                  setModalidad('barra');
                   setModalMesas(false);
+                  cambiarModalidadYLimpiar('barra');
                 }}
                 className={`py-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
                   modalidad === 'barra'
@@ -1360,8 +1375,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               <button
                 type="button"
                 onClick={() => {
-                  setModalidad('llevar');
                   setModalMesas(false);
+                  cambiarModalidadYLimpiar('llevar');
                 }}
                 className={`py-3 rounded-xl border text-xs font-bold uppercase tracking-wider transition cursor-pointer ${
                   modalidad === 'llevar'
