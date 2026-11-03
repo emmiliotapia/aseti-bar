@@ -255,7 +255,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
           <div className="px-1 py-1">
             <div className="w-full h-14 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">
               <img 
-                src="/logo-marejada-pos-trans.png" 
+                src="/logo-pos-blanco.png" 
                 alt="MAREJADA – Café, Cocina, Bar" 
                 className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]" 
               />

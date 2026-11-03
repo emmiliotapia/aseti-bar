@@ -68,7 +68,7 @@ export default function LoginPinView({ onLoginSuccess }) {
         <div className="flex flex-col items-center space-y-2 text-center w-full">
           <div className="w-full h-16 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">
             <img 
-              src="/logo-marejada-pos-trans.png" 
+              src="/logo-pos-blanco.png" 
               alt="MAREJADA – Café, Cocina, Bar" 
               className="w-full h-full object-contain filter drop-shadow-[0_0_10px_rgba(255,255,255,0.2)]" 
             />
