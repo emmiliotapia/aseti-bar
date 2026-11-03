@@ -13,8 +13,8 @@ Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="ASETI BAR POS API",
-    version="1.2.0",
-    description="Motor backend para POS con fotos de productos, turnos, login por usuario/PIN y reportes."
+    version="1.3.0",
+    description="Motor backend para POS con control estricto de asistencia por Admin."
 )
 
 app.add_middleware(
@@ -29,16 +29,16 @@ app.add_middleware(
 def seed_data():
     db = next(get_db())
     try:
-        # Usuarios iniciales con campo usuario
+        # 1. Usuarios iniciales: Admin siempre tiene acceso, cajero/mesero requieren pase de lista
         if db.query(models.Usuario).count() == 0:
             db.add_all([
-                models.Usuario(nombre="Emilio Tapia", usuario="emilio", pin="1234", rol="cajero", cargo="Cajero de Barra"),
-                models.Usuario(nombre="Carlos Mesero", usuario="carlos", pin="1111", rol="mesero", cargo="Mesero de Terraza"),
-                models.Usuario(nombre="Admin General", usuario="admin", pin="9999", rol="admin", cargo="Administrador General"),
+                models.Usuario(nombre="Admin General", usuario="admin", pin="9999", rol="admin", cargo="Administrador General", activo_hoy=True),
+                models.Usuario(nombre="Emilio Tapia", usuario="emilio", pin="1234", rol="cajero", cargo="Cajero de Barra", activo_hoy=True),
+                models.Usuario(nombre="Carlos Mesero", usuario="carlos", pin="1111", rol="mesero", cargo="Mesero de Terraza", activo_hoy=False),
             ])
             db.commit()
 
-        # Configuración base
+        # 2. Configuración base
         if db.query(models.Configuracion).count() == 0:
             db.add_all([
                 models.Configuracion(clave="nombre_negocio", valor="ASETI BAR"),
@@ -49,7 +49,7 @@ def seed_data():
             ])
             db.commit()
 
-        # Catálogo con soporte de imagen_url
+        # 3. Catálogo con fotos
         if db.query(models.Producto).count() == 0:
             prods = [
                 models.Producto(nombre="Corona Extra 355ml", precio=48.0, categoria="Cervezas", emoji="🍺", descripcion="Cerveza clara bien fría", imagen_url="https://images.unsplash.com/photo-1608270191768-450f75745025?w=500&auto=format&fit=crop&q=60"),
@@ -68,7 +68,7 @@ def seed_data():
 
 
 # ========================================================
-# 1. AUTENTICACIÓN (USUARIO + PIN)
+# 1. LOGIN (VERIFICA ASISTENCIA AUTORIZADA POR ADMIN)
 # ========================================================
 @app.post("/auth/login", response_model=schemas.Usuario, tags=["Autenticación"])
 def login_por_usuario_y_pin(req: schemas.LoginRequest, db: Session = Depends(get_db)):
@@ -76,24 +76,46 @@ def login_por_usuario_y_pin(req: schemas.LoginRequest, db: Session = Depends(get
         func.lower(models.Usuario.usuario) == req.usuario.lower(),
         models.Usuario.pin == req.pin
     ).first()
+
     if not usuario:
         raise HTTPException(status_code=401, detail="Usuario o PIN incorrecto.")
+
+    # REGLA: Si es cajero o mesero, el Administrador debe haber marcado su asistencia previa
+    if usuario.rol in ["cajero", "mesero"] and not usuario.activo_hoy:
+        raise HTTPException(
+            status_code=403, 
+            detail=f"Acceso bloqueado: {usuario.nombre} no tiene asistencia autorizada por el Administrador hoy."
+        )
+
     return usuario
 
 
 # ========================================================
-# 2. ASISTENCIA (CHECK-IN / ENTRADA Y SALIDA)
+# 2. CONTROL DE ASISTENCIA POR EL ADMINISTRADOR
 # ========================================================
-@app.post("/asistencia/marcar", tags=["Asistencia"])
-def marcar_asistencia(datos: schemas.AsistenciaCreate, db: Session = Depends(get_db)):
-    registro = models.Asistencia(usuario_id=datos.usuario_id, tipo=datos.tipo)
+@app.post("/asistencia/autorizar", tags=["Asistencia"])
+def autorizar_asistencia_por_admin(datos: schemas.AsistenciaAdminToggle, db: Session = Depends(get_db)):
+    usuario = db.query(models.Usuario).filter(models.Usuario.id == datos.usuario_id).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+
+    usuario.activo_hoy = datos.autorizar
+    tipo_registro = "entrada" if datos.autorizar else "salida"
+
+    registro = models.Asistencia(
+        usuario_id=usuario.id,
+        tipo=tipo_registro,
+        autorizado_por=datos.autorizado_por or "Admin"
+    )
     db.add(registro)
     db.commit()
-    db.refresh(registro)
+    db.refresh(usuario)
+
+    estado_str = "Habilitado para ingresar al POS" if datos.autorizar else "Deshabilitado (Salida marcada)"
     return {
         "status": "ok",
-        "mensaje": f"Asistencia ({datos.tipo.upper()}) registrada con éxito",
-        "registro": registro
+        "mensaje": f"{usuario.nombre} ha sido {estado_str}.",
+        "usuario": usuario
     }
 
 @app.get("/asistencia/historial", tags=["Asistencia"])
@@ -104,6 +126,7 @@ def ver_asistencias(db: Session = Depends(get_db)):
             "id": r.id,
             "usuario": r.usuario.nombre if r.usuario else "Desconocido",
             "tipo": r.tipo,
+            "autorizado_por": r.autorizado_por,
             "fecha_hora": r.fecha_hora
         }
         for r in registros
@@ -219,21 +242,19 @@ def generar_corte_z(db: Session = Depends(get_db)):
 
 
 # ========================================================
-# 5. REPORTES BÁSICOS DE VENTAS
+# 5. REPORTES DE VENTAS
 # ========================================================
 @app.get("/reportes/ventas", tags=["Reportes"])
 def reporte_ventas_general(db: Session = Depends(get_db)):
     total_acumulado = db.query(func.coalesce(func.sum(models.Ticket.total), 0.0)).scalar()
     total_tickets = db.query(func.count(models.Ticket.id)).scalar()
 
-    # Ventas agrupadas por método de pago
     por_metodo = db.query(
         models.Ticket.metodo_pago,
         func.sum(models.Ticket.total).label("total"),
         func.count(models.Ticket.id).label("cantidad")
     ).group_by(models.Ticket.metodo_pago).all()
 
-    # Top productos más vendidos
     top_prods = db.query(
         models.Producto.nombre,
         models.Producto.emoji,
@@ -244,7 +265,6 @@ def reporte_ventas_general(db: Session = Depends(get_db)):
      .order_by(func.sum(models.Partida.cantidad).desc())\
      .limit(5).all()
 
-    # Últimos 10 tickets
     ultimos_tickets = db.query(models.Ticket).order_by(models.Ticket.id.desc()).limit(10).all()
 
     return {
@@ -269,7 +289,7 @@ def reporte_ventas_general(db: Session = Depends(get_db)):
 
 
 # ========================================================
-# 6. REGISTRO DE VENTAS
+# 6. VENTAS
 # ========================================================
 @app.post("/ventas/ticket", response_model=schemas.TicketResponse, status_code=status.HTTP_201_CREATED, tags=["Ventas"])
 def registrar_ticket(ticket_data: schemas.TicketCreate, db: Session = Depends(get_db)):
@@ -300,7 +320,7 @@ def registrar_ticket(ticket_data: schemas.TicketCreate, db: Session = Depends(ge
 
 
 # ========================================================
-# 7. USUARIOS (GESTIÓN CAJEROS / MESEROS)
+# 7. USUARIOS
 # ========================================================
 @app.get("/usuarios", response_model=List[schemas.Usuario], tags=["Usuarios"])
 def listar_usuarios(db: Session = Depends(get_db)):
@@ -316,7 +336,8 @@ def crear_usuario(usr: schemas.UsuarioCreate, db: Session = Depends(get_db)):
         usuario=usr.usuario.lower(),
         pin=usr.pin,
         rol=usr.rol,
-        cargo=usr.cargo or "Personal de Servicio"
+        cargo=usr.cargo or "Personal de Servicio",
+        activo_hoy=False # Por defecto requiere que el admin le dé pase de lista
     )
     db.add(nuevo)
     db.commit()

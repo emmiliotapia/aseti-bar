@@ -1,10 +1,9 @@
-from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func, Text
+from sqlalchemy import Column, Integer, String, Float, DateTime, ForeignKey, func, Text, Boolean
 from sqlalchemy.orm import relationship
 from database import Base
 
 # ========================================================
-# DIRECTIVAS sqlite-pos-rules.md:
-# CERO INVENTARIOS
+# DIRECTIVAS sqlite-pos-rules.md: CERO INVENTARIOS
 # ========================================================
 
 class Usuario(Base):
@@ -12,10 +11,11 @@ class Usuario(Base):
 
     id = Column(Integer, primary_key=True, index=True, autoincrement=True)
     nombre = Column(String, nullable=False)
-    usuario = Column(String, unique=True, nullable=False, index=True) # user login
+    usuario = Column(String, unique=True, nullable=False, index=True)
     pin = Column(String, nullable=False)
     rol = Column(String, nullable=False) # 'cajero' | 'mesero' | 'admin'
     cargo = Column(String, default="Personal de Servicio", nullable=False)
+    activo_hoy = Column(Boolean, default=False, nullable=False) # Asistencia autorizada por admin
 
     turnos = relationship("Turno", back_populates="usuario")
     asistencias = relationship("Asistencia", back_populates="usuario")
@@ -28,6 +28,7 @@ class Asistencia(Base):
     usuario_id = Column(Integer, ForeignKey("usuarios.id"), nullable=False)
     tipo = Column(String, nullable=False) # 'entrada' | 'salida'
     fecha_hora = Column(DateTime, server_default=func.now(), nullable=False)
+    autorizado_por = Column(String, default="Admin", nullable=False)
 
     usuario = relationship("Usuario", back_populates="asistencias")
 
@@ -63,7 +64,7 @@ class Producto(Base):
     color_boton = Column(String, default="#14171E", nullable=False)
     descripcion = Column(String, default="", nullable=False)
     emoji = Column(String, default="🍺", nullable=False)
-    imagen_url = Column(Text, default="", nullable=False) # Soporte para fotos / URLs
+    imagen_url = Column(Text, default="", nullable=False)
 
     partidas = relationship("Partida", back_populates="producto")
 
@@ -75,7 +76,7 @@ class Ticket(Base):
     turno_id = Column(Integer, ForeignKey("turnos.id"), nullable=True)
     total = Column(Float, nullable=False)
     fecha_hora = Column(DateTime, server_default=func.now(), nullable=False)
-    metodo_pago = Column(String, nullable=False) # 'efectivo' | 'tarjeta'
+    metodo_pago = Column(String, nullable=False)
     cajero_id = Column(String, nullable=False)
 
     turno = relationship("Turno", back_populates="tickets")

@@ -15,12 +15,12 @@ export const api = {
     return res.json();
   },
 
-  // Asistencia (Entrada / Salida)
-  marcarAsistencia: async (usuario_id, tipo) => {
-    const res = await fetch(`${API_BASE}/asistencia/marcar`, {
+  // Asistencia (Control exclusivo por Admin)
+  autorizarAsistencia: async (usuario_id, autorizar, autorizado_por = "Admin") => {
+    const res = await fetch(`${API_BASE}/asistencia/autorizar`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ usuario_id, tipo }),
+      body: JSON.stringify({ usuario_id, autorizar, autorizado_por }),
     });
     return res.json();
   },

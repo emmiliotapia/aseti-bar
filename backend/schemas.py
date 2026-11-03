@@ -34,8 +34,9 @@ class UsuarioBase(BaseModel):
     nombre: str
     usuario: str
     pin: str
-    rol: str # 'cajero' | 'mesero' | 'admin'
+    rol: str
     cargo: Optional[str] = "Personal de Servicio"
+    activo_hoy: Optional[bool] = False
 
 class UsuarioCreate(UsuarioBase):
     pass
@@ -46,6 +47,7 @@ class UsuarioUpdate(BaseModel):
     pin: Optional[str] = None
     rol: Optional[str] = None
     cargo: Optional[str] = None
+    activo_hoy: Optional[bool] = None
 
 class Usuario(BaseModel):
     id: int
@@ -54,6 +56,7 @@ class Usuario(BaseModel):
     pin: str
     rol: str
     cargo: str
+    activo_hoy: bool
     model_config = ConfigDict(from_attributes=True)
 
 class LoginRequest(BaseModel):
@@ -62,15 +65,17 @@ class LoginRequest(BaseModel):
 
 
 # --- SCHEMAS DE ASISTENCIA ---
-class AsistenciaCreate(BaseModel):
+class AsistenciaAdminToggle(BaseModel):
     usuario_id: int
-    tipo: str # 'entrada' | 'salida'
+    autorizar: bool
+    autorizado_por: Optional[str] = "Admin"
 
 class AsistenciaResponse(BaseModel):
     id: int
     usuario_id: int
     tipo: str
     fecha_hora: datetime
+    autorizado_por: str
     model_config = ConfigDict(from_attributes=True)
 
 

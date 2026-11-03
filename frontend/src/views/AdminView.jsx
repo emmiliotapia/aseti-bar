@@ -16,17 +16,17 @@ import {
   Loader2, 
   CheckCircle2,
   Clock,
-  Image,
   TrendingUp,
-  Receipt
+  Receipt,
+  UserCheck,
+  UserX
 } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function AdminView({ usuario, onBackToCaja, onLogout }) {
-  // 'catalogo' | 'corte' | 'reportes' | 'cajeros' | 'asistencia' | 'configuracion'
-  const [tabActiva, setTabActiva] = useState('catalogo');
+  const [tabActiva, setTabActiva] = useState('asistencia');
   
-  // Catálogo (ABM Productos con Foto / URL)
+  // Catálogo
   const [productos, setProductos] = useState([]);
   const [modalProd, setModalProd] = useState(false);
   const [editandoProdId, setEditandoProdId] = useState(null);
@@ -44,7 +44,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
   const [corteData, setCorteData] = useState(null);
   const [cargandoCorte, setCargandoCorte] = useState(false);
 
-  // Reportes de Ventas
+  // Reportes
   const [reporte, setReporte] = useState(null);
 
   // Cajeros / Meseros
@@ -54,11 +54,11 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
     nombre: '',
     usuario: '',
     pin: '',
-    rol: 'cajero',
-    cargo: 'Personal de Barra'
+    rol: 'mesero',
+    cargo: 'Mesero de Sala'
   });
 
-  // Asistencia
+  // Historial Asistencias
   const [asistencias, setAsistencias] = useState([]);
 
   // Configuración
@@ -106,6 +106,19 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
     cargarTodo();
     cargarCorteActual();
   }, []);
+
+  // TOGGLE DE ASISTENCIA POR EL ADMINISTRADOR (PASE DE LISTA)
+  const alternarAsistenciaAdmin = async (user, nuevoEstado) => {
+    try {
+      await api.autorizarAsistencia(user.id, nuevoEstado, usuario?.nombre || "Admin");
+      const [u, asis] = await Promise.all([api.getUsuarios(), api.getAsistencias()]);
+      setUsuariosLista(u);
+      setAsistencias(asis);
+      notificar(`${user.nombre} ha sido ${nuevoEstado ? 'habilitado para operar en el POS' : 'deshabilitado'}`);
+    } catch (err) {
+      alert("Error al actualizar asistencia: " + err.message);
+    }
+  };
 
   // PRODUCTOS
   const abrirModalNuevoProd = () => {
@@ -163,13 +176,13 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
     }
   };
 
-  // USUARIOS (CAJEROS / MESEROS)
+  // USUARIOS
   const guardarUsuario = async (e) => {
     e.preventDefault();
     try {
       await api.createUsuario(formUsuario);
       setModalUsuario(false);
-      setFormUsuario({ nombre: '', usuario: '', pin: '', rol: 'cajero', cargo: 'Personal de Barra' });
+      setFormUsuario({ nombre: '', usuario: '', pin: '', rol: 'mesero', cargo: 'Mesero de Sala' });
       const data = await api.getUsuarios();
       setUsuariosLista(data);
       notificar("¡Usuario registrado con éxito!");
@@ -179,7 +192,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
   };
 
   const eliminarUsuario = async (id) => {
-    if (confirm("¿Eliminar a este usuario?")) {
+    if (confirm("¿Eliminar a este colaborador?")) {
       await api.deleteUsuario(id);
       const data = await api.getUsuarios();
       setUsuariosLista(data);
@@ -193,7 +206,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
       try {
         const res = await api.postCorteZ();
         setCorteData(res);
-        notificar("¡Corte Z ejecutado!");
+        notificar("¡Corte Z ejecutado con éxito!");
       } catch (err) {
         alert(err.message);
       }
@@ -219,7 +232,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
   return (
     <div className="flex h-screen w-screen bg-[#0B0C10] text-[#C5C6C7] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
       
-      {/* SIDEBAR ADMIN PERMANENTE */}
+      {/* SIDEBAR ADMIN */}
       <aside className="w-64 bg-[#14171E] border-r border-[#1F2833] flex flex-col justify-between p-4 shrink-0">
         <div className="space-y-6">
           <div className="flex items-center gap-3 px-3 py-2">
@@ -231,12 +244,24 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
                 ADMIN <span className="text-[#C5A059]">PANEL</span>
               </h1>
               <p className="text-[10px] font-mono tracking-widest text-[#8E9297] uppercase">
-                Sesión de Gestión Activa
+                Control y Gestión
               </p>
             </div>
           </div>
 
           <nav className="space-y-1.5" aria-label="Navegación Admin">
+            <button
+              onClick={() => setTabActiva('asistencia')}
+              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
+                tabActiva === 'asistencia'
+                  ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
+                  : 'text-[#8E9297] hover:bg-[#1F2833] hover:text-white'
+              }`}
+            >
+              <Clock size={18} />
+              <span>Pase de Asistencia</span>
+            </button>
+
             <button
               onClick={() => setTabActiva('catalogo')}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
@@ -286,18 +311,6 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
             </button>
 
             <button
-              onClick={() => setTabActiva('asistencia')}
-              className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
-                tabActiva === 'asistencia'
-                  ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
-                  : 'text-[#8E9297] hover:bg-[#1F2833] hover:text-white'
-              }`}
-            >
-              <Clock size={18} />
-              <span>Reloj Asistencias</span>
-            </button>
-
-            <button
               onClick={() => setTabActiva('configuracion')}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'configuracion'
@@ -311,7 +324,6 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
           </nav>
         </div>
 
-        {/* Acciones del Admin: Ir a cobrar a caja sin cerrar sesión */}
         <div className="space-y-2">
           <button
             onClick={onBackToCaja}
@@ -341,7 +353,115 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
           </div>
         )}
 
-        {/* 1. CATÁLOGO CON EDICIÓN DE FOTOS */}
+        {/* 1. PASE DE ASISTENCIA / HABILITACIÓN DE ACCESO POR EL ADMIN */}
+        {tabActiva === 'asistencia' && (
+          <div className="max-w-4xl space-y-6">
+            <div>
+              <h2 className="font-['Syne'] font-extrabold text-2xl text-white">Pase de Lista y Asistencia</h2>
+              <p className="text-xs font-mono text-[#8E9297] uppercase tracking-wider mt-1">
+                El Administrador autoriza qué meseros y cajeros pueden ingresar a laborar en el POS hoy
+              </p>
+            </div>
+
+            <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-hidden">
+              <table className="w-full text-left text-xs">
+                <thead className="bg-[#0B0C10] text-[#8E9297] font-mono uppercase tracking-wider border-b border-[#1F2833]">
+                  <tr>
+                    <th className="p-4">Colaborador</th>
+                    <th className="p-4">Usuario</th>
+                    <th className="p-4">Rol / Cargo</th>
+                    <th className="p-4">Estado de Acceso</th>
+                    <th className="p-4 text-right">Acción de Asistencia</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-[#1F2833]">
+                  {usuariosLista.filter(u => u.rol !== 'admin').map(u => (
+                    <tr key={u.id} className="hover:bg-[#1F2833]/40">
+                      <td className="p-4 font-bold text-white">{u.nombre}</td>
+                      <td className="p-4 font-mono text-[#C5A059]">{u.usuario}</td>
+                      <td className="p-4 text-[#8E9297]">{u.cargo} ({u.rol})</td>
+                      <td className="p-4">
+                        {u.activo_hoy ? (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-emerald-950/50 text-emerald-400 border border-emerald-500/40">
+                            <UserCheck size={14} />
+                            <span>Asistencia Activa</span>
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-red-950/40 text-red-400 border border-red-900/40">
+                            <UserX size={14} />
+                            <span>Bloqueado (Sin Pase)</span>
+                          </span>
+                        )}
+                      </td>
+                      <td className="p-4 text-right">
+                        {u.activo_hoy ? (
+                          <button
+                            onClick={() => alternarAsistenciaAdmin(u, false)}
+                            className="px-4 py-2 bg-red-950/30 hover:bg-red-900/50 text-red-400 border border-red-800/40 rounded-xl font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
+                          >
+                            Dar Salida
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => alternarAsistenciaAdmin(u, true)}
+                            className="px-4 py-2 bg-[#C5A059] hover:bg-[#D4AF37] text-[#0B0C10] font-black rounded-xl text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer shadow-md"
+                          >
+                            Dar Entrada (Habilitar)
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            {/* Historial de Movimientos de Asistencia */}
+            <div className="space-y-3 pt-4">
+              <h3 className="font-['Syne'] font-bold text-base text-white">Historial de Registros</h3>
+              <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-hidden">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-[#0B0C10] text-[#8E9297] font-mono uppercase tracking-wider border-b border-[#1F2833]">
+                    <tr>
+                      <th className="p-3.5">Colaborador</th>
+                      <th className="p-3.5">Movimiento</th>
+                      <th className="p-3.5">Autorizado Por</th>
+                      <th className="p-3.5 text-right">Fecha y Hora</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[#1F2833]">
+                    {asistencias.length === 0 ? (
+                      <tr>
+                        <td colSpan={4} className="p-6 text-center text-[#8E9297]">
+                          Sin registros de asistencia aún.
+                        </td>
+                      </tr>
+                    ) : (
+                      asistencias.slice(0, 8).map(a => (
+                        <tr key={a.id}>
+                          <td className="p-3.5 font-bold text-white">{a.usuario}</td>
+                          <td className="p-3.5">
+                            <span className={`px-2 py-0.5 rounded-md font-mono text-[10px] font-bold uppercase ${
+                              a.tipo === 'entrada' ? 'bg-emerald-950/60 text-emerald-400' : 'bg-amber-950/60 text-amber-400'
+                            }`}>
+                              {a.tipo}
+                            </span>
+                          </td>
+                          <td className="p-3.5 text-[#8E9297] font-mono">{a.autorizado_por}</td>
+                          <td className="p-3.5 text-right font-mono text-[#8E9297]">
+                            {new Date(a.fecha_hora).toLocaleTimeString()}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* 2. CATÁLOGO CON FOTOS */}
         {tabActiva === 'catalogo' && (
           <div className="space-y-6">
             <div className="flex items-center justify-between">
@@ -412,7 +532,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
           </div>
         )}
 
-        {/* 2. REPORTES BÁSICOS DE VENTAS */}
+        {/* 3. REPORTES BÁSICOS DE VENTAS */}
         {tabActiva === 'reportes' && (
           <div className="max-w-4xl space-y-6">
             <div>
@@ -440,7 +560,6 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-5">
-                  {/* Top Productos */}
                   <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-4">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-white">Top 5 Más Vendidos</h3>
                     <div className="space-y-2.5">
@@ -459,7 +578,6 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
                     </div>
                   </div>
 
-                  {/* Últimas Ventas */}
                   <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-4">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-white">Últimos Tickets</h3>
                     <div className="space-y-2">
@@ -480,7 +598,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
           </div>
         )}
 
-        {/* 3. CORTES X Y Z */}
+        {/* 4. CORTES X Y Z */}
         {tabActiva === 'corte' && (
           <div className="max-w-4xl space-y-6">
             <div>
@@ -568,7 +686,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
           </div>
         )}
 
-        {/* 4. GESTIÓN DE CAJEROS & MESEROS */}
+        {/* 5. GESTIÓN DE CAJEROS & MESEROS */}
         {tabActiva === 'cajeros' && (
           <div className="max-w-4xl space-y-6">
             <div className="flex items-center justify-between">
@@ -615,64 +733,17 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
                       </td>
                       <td className="p-4 font-mono font-bold text-white">•••• ({u.pin})</td>
                       <td className="p-4 text-right">
-                        <button
-                          onClick={() => eliminarUsuario(u.id)}
-                          className="text-xs text-red-400 hover:underline font-bold"
-                        >
-                          Eliminar
-                        </button>
+                        {u.rol !== 'admin' && (
+                          <button
+                            onClick={() => eliminarUsuario(u.id)}
+                            className="text-xs text-red-400 hover:underline font-bold"
+                          >
+                            Eliminar
+                          </button>
+                        )}
                       </td>
                     </tr>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        {/* 5. HISTORIAL DE ASISTENCIAS */}
-        {tabActiva === 'asistencia' && (
-          <div className="max-w-4xl space-y-6">
-            <div>
-              <h2 className="font-['Syne'] font-extrabold text-2xl text-white">Reloj Checador & Asistencia</h2>
-              <p className="text-xs font-mono text-[#8E9297] uppercase tracking-wider mt-1">
-                Registros de entradas y salidas de cajeros y meseros
-              </p>
-            </div>
-
-            <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-hidden">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-[#0B0C10] text-[#8E9297] font-mono uppercase tracking-wider border-b border-[#1F2833]">
-                  <tr>
-                    <th className="p-4">Colaborador</th>
-                    <th className="p-4">Movimiento</th>
-                    <th className="p-4">Fecha y Hora</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[#1F2833]">
-                  {asistencias.length === 0 ? (
-                    <tr>
-                      <td colSpan={3} className="p-6 text-center text-[#8E9297]">
-                        Sin registros de asistencia aún.
-                      </td>
-                    </tr>
-                  ) : (
-                    asistencias.map(a => (
-                      <tr key={a.id} className="hover:bg-[#1F2833]/40">
-                        <td className="p-4 font-bold text-white">{a.usuario}</td>
-                        <td className="p-4">
-                          <span className={`px-2.5 py-1 rounded-md font-mono text-[10px] font-bold uppercase ${
-                            a.tipo === 'entrada' ? 'bg-emerald-950/60 text-emerald-400' : 'bg-amber-950/60 text-amber-400'
-                          }`}>
-                            {a.tipo}
-                          </span>
-                        </td>
-                        <td className="p-4 font-mono text-[#8E9297]">
-                          {new Date(a.fecha_hora).toLocaleString()}
-                        </td>
-                      </tr>
-                    ))
-                  )}
                 </tbody>
               </table>
             </div>
@@ -933,8 +1004,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
                     onChange={e => setFormUsuario({ ...formUsuario, rol: e.target.value })}
                     className="w-full bg-[#0B0C10] border border-[#1F2833] rounded-xl p-2.5 text-white text-xs outline-none focus:border-[#C5A059]"
                   >
-                    <option value="cajero">Cajero</option>
                     <option value="mesero">Mesero</option>
+                    <option value="cajero">Cajero</option>
                     <option value="admin">Administrador</option>
                   </select>
                 </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Delete, KeyRound, ShieldAlert, User, ShieldCheck, Loader2, Clock } from 'lucide-react';
+import { Delete, KeyRound, ShieldAlert, User, ShieldCheck, Loader2 } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function LoginPinView({ onLoginSuccess }) {
@@ -7,7 +7,6 @@ export default function LoginPinView({ onLoginSuccess }) {
   const [pin, setPin] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [cargando, setCargando] = useState(false);
-  const [asistenciaMsg, setAsistenciaMsg] = useState('');
 
   const handleDigit = (digit) => {
     if (pin.length < 4 && !cargando) {
@@ -49,27 +48,7 @@ export default function LoginPinView({ onLoginSuccess }) {
       setTimeout(() => {
         setPin('');
         setCargando(false);
-      }, 500);
-    }
-  };
-
-  // Marcar Asistencia rápida (Check-in reloj checador)
-  const marcarAsistenciaReloj = async (tipo) => {
-    if (!usuarioInput.trim() || pin.length < 4) {
-      setErrorMsg('Ingresa usuario y PIN para checar');
-      return;
-    }
-    setCargando(true);
-    try {
-      const user = await api.login(usuarioInput.trim(), pin);
-      await api.marcarAsistencia(user.id, tipo);
-      setAsistenciaMsg(`✅ Asistencia (${tipo.toUpperCase()}) registrada: ${user.nombre}`);
-      setPin('');
-      setTimeout(() => setAsistenciaMsg(''), 3000);
-    } catch (err) {
-      setErrorMsg(err.message || 'Error al validar credencial');
-    } finally {
-      setCargando(false);
+      }, 700);
     }
   };
 
@@ -94,7 +73,7 @@ export default function LoginPinView({ onLoginSuccess }) {
             ASETI <span className="text-[#C5A059]">BAR</span>
           </h1>
           <p className="text-[11px] font-['JetBrains_Mono'] tracking-widest text-[#8E9297] uppercase">
-            Acceso Personal y Asistencia
+            Acceso Personal Autorizado
           </p>
         </div>
 
@@ -108,7 +87,7 @@ export default function LoginPinView({ onLoginSuccess }) {
               autoFocus
               value={usuarioInput}
               onChange={(e) => setUsuarioInput(e.target.value)}
-              placeholder="Ej. emilio, admin, carlos"
+              placeholder="Ej. emilio, carlos, admin"
               className="w-full h-11 pl-10 pr-3 bg-[#0B0C10] border border-[#1F2833] focus:border-[#C5A059] rounded-xl text-xs text-white placeholder-[#8E9297] outline-none transition"
             />
           </div>
@@ -128,16 +107,14 @@ export default function LoginPinView({ onLoginSuccess }) {
           ))}
         </div>
 
-        {asistenciaMsg && (
-          <div className="text-[11px] text-emerald-400 font-bold bg-emerald-950/40 p-2 rounded-lg border border-emerald-500/40 text-center w-full animate-pulse">
-            {asistenciaMsg}
+        {errorMsg ? (
+          <div className="flex items-center justify-center gap-1.5 text-xs text-red-400 font-bold bg-red-950/30 px-3 py-2 rounded-xl border border-red-900/40 w-full text-center">
+            <ShieldAlert size={16} className="shrink-0" />
+            <span className="leading-tight">{errorMsg}</span>
           </div>
-        )}
-
-        {errorMsg && (
-          <div className="flex items-center justify-center gap-1.5 text-xs text-red-400 font-bold bg-red-950/30 px-3 py-1.5 rounded-lg border border-red-900/40 w-full">
-            <ShieldAlert size={14} />
-            <span>{errorMsg}</span>
+        ) : (
+          <div className="h-6 text-[10px] text-[#8E9297] text-center font-mono">
+            * El cajero/mesero requiere pase de lista previo del Admin
           </div>
         )}
 
@@ -185,26 +162,6 @@ export default function LoginPinView({ onLoginSuccess }) {
           })}
         </div>
 
-        {/* Botones de Asistencia (Entrada / Salida reloj) */}
-        <div className="grid grid-cols-2 gap-2 w-full pt-1">
-          <button
-            onClick={() => marcarAsistenciaReloj('entrada')}
-            className="py-2.5 bg-[#1F2833] hover:bg-[#2C3540] border border-[#2C3540] text-emerald-400 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-          >
-            <Clock size={13} />
-            <span>Checar Entrada</span>
-          </button>
-
-          <button
-            onClick={() => marcarAsistenciaReloj('salida')}
-            className="py-2.5 bg-[#1F2833] hover:bg-[#2C3540] border border-[#2C3540] text-amber-400 text-[11px] font-bold rounded-xl flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
-          >
-            <Clock size={13} />
-            <span>Checar Salida</span>
-          </button>
-        </div>
-
-        {/* Pistas Demo */}
         <div className="w-full pt-2 border-t border-[#1F2833]/60 flex items-center justify-between text-[10px] font-mono text-[#8E9297]">
           <span>emilio : 1234</span>
           <span>admin : 9999</span>
