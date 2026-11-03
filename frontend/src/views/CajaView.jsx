@@ -52,6 +52,12 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [modalFondo, setModalFondo] = useState(false);
   const [fondoInput, setFondoInput] = useState('1000');
 
+  // Modal de Cobro & Cálculo de Cambio & Ticket Previo
+  const [modalCobro, setModalCobro] = useState(false);
+  const [metodoSeleccionado, setMetodoSeleccionado] = useState('efectivo'); // 'efectivo' | 'tarjeta'
+  const [montoRecibido, setMontoRecibido] = useState('');
+  const [ticketFinalizado, setTicketFinalizado] = useState(null); // Para mostrar vista previa o imprimir ticket tras cobro
+
   const esAdmin = usuario?.rol === 'admin';
 
   const cargarCatalogo = async () => {
@@ -130,13 +136,27 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
     return coincideCat && coincideBusq;
   });
 
-  const ejecutarCobro = async (metodo) => {
-    if (ticketItems.length === 0 || cobrando) return;
+  const abrirCobroModal = (metodo) => {
+    if (ticketItems.length === 0) return;
+    setMetodoSeleccionado(metodo);
+    // Para efectivo, sugerir el monto exacto
+    setMontoRecibido(total.toString());
+    setModalCobro(true);
+  };
+
+  const procesarVentaFinal = async () => {
+    if (cobrando) return;
+    const pagado = parseFloat(montoRecibido) || total;
+    if (metodoSeleccionado === 'efectivo' && pagado < total) {
+      alert("El monto recibido es menor al total a pagar.");
+      return;
+    }
+
     setCobrando(true);
     try {
       const payload = {
         total,
-        metodo_pago: metodo,
+        metodo_pago: metodoSeleccionado,
         cajero_id: usuario?.nombre || "Cajero",
         turno_id: turnoActivo?.id || null,
         partidas: ticketItems.map(item => ({
@@ -146,13 +166,27 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         }))
       };
 
-      await api.registrarTicket(payload);
-      setCobroExitoso(true);
-      setTimeout(() => {
-        setTicketItems([]);
-        setCobroExitoso(false);
-        setCobrando(false);
-      }, 1200);
+      const resTicket = await api.registrarTicket(payload);
+      
+      const cambioCalculado = metodoSeleccionado === 'efectivo' ? Math.max(0, pagado - total) : 0;
+      
+      setTicketFinalizado({
+        id: resTicket.id,
+        items: [...ticketItems],
+        total,
+        pagado,
+        cambio: cambioCalculado,
+        metodo: metodoSeleccionado,
+        cajero: usuario?.nombre || "Cajero",
+        fecha: new Date().toLocaleTimeString(),
+        mesa: mesaSeleccionada,
+        nota: notaOrden
+      });
+
+      setModalCobro(false);
+      setTicketItems([]);
+      setNotaOrden('');
+      setCobrando(false);
     } catch (err) {
       alert("Error al procesar cobro: " + err.message);
       setCobrando(false);
@@ -516,21 +550,21 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
           <div className="space-y-2.5 pt-1">
             <button
-              onClick={() => ejecutarCobro("tarjeta")}
+              onClick={() => abrirCobroModal("tarjeta")}
               disabled={ticketItems.length === 0 || cobrando}
               className="w-full h-13 flex items-center justify-center gap-2 bg-[#1F2833] active:bg-[#2C3540] disabled:opacity-30 disabled:cursor-not-allowed border border-[#2C3540] rounded-xl text-white font-bold text-xs uppercase tracking-wider transition active:scale-95 cursor-pointer"
             >
               <CreditCard size={17} className="text-[#C5A059]" />
-              <span>{cobrando ? "Procesando..." : "Cobrar con Tarjeta"}</span>
+              <span>Cobrar con Tarjeta</span>
             </button>
 
             <button
-              onClick={() => ejecutarCobro("efectivo")}
+              onClick={() => abrirCobroModal("efectivo")}
               disabled={ticketItems.length === 0 || cobrando}
               className="w-full h-15 flex items-center justify-center gap-2.5 bg-gradient-to-r from-[#C5A059] to-[#D4AF37] active:from-[#9E7D3B] active:to-[#C5A059] disabled:opacity-30 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm uppercase tracking-wider rounded-2xl shadow-[0_6px_22px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
             >
               <Banknote size={20} />
-              <span>{cobrando ? "Registrando Venta..." : "Cobrar en Efectivo"}</span>
+              <span>Cobro en Efectivo / Cambio</span>
             </button>
           </div>
         </div>
@@ -595,6 +629,215 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL DE COBRO INTERACTIVO: CÁLCULO DE PAGO Y CAMBIO
+          ======================================================== */}
+      {modalCobro && (
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-lg bg-[#14171E] border border-[#1F2833] rounded-3xl p-7 space-y-6 shadow-2xl">
+            <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
+              <div>
+                <h3 className="font-['Syne'] font-extrabold text-xl text-white">
+                  Procesar Cobro de Cuenta
+                </h3>
+                <p className="text-xs text-[#8E9297]">
+                  Mesa {mesaSeleccionada} • {ticketItems.length} artículos en comanda
+                </p>
+              </div>
+              <button
+                onClick={() => setModalCobro(false)}
+                className="w-8 h-8 rounded-full bg-[#1F2833] text-[#8E9297] hover:text-white flex items-center justify-center"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Selector de Método de Pago */}
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => {
+                  setMetodoSeleccionado('efectivo');
+                  setMontoRecibido(total.toString());
+                }}
+                className={`p-4 rounded-2xl border flex flex-col items-center gap-2 cursor-pointer transition active:scale-95 ${
+                  metodoSeleccionado === 'efectivo'
+                    ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.3)]'
+                    : 'bg-[#0B0C10] border-[#1F2833] text-[#8E9297] hover:text-white'
+                }`}
+              >
+                <Banknote size={24} />
+                <span className="font-bold text-xs uppercase tracking-wider">Pago en Efectivo</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setMetodoSeleccionado('tarjeta');
+                  setMontoRecibido(total.toString());
+                }}
+                className={`p-4 rounded-2xl border flex flex-col items-center gap-2 cursor-pointer transition active:scale-95 ${
+                  metodoSeleccionado === 'tarjeta'
+                    ? 'bg-[#C5A059] border-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.3)]'
+                    : 'bg-[#0B0C10] border-[#1F2833] text-[#8E9297] hover:text-white'
+                }`}
+              >
+                <CreditCard size={24} />
+                <span className="font-bold text-xs uppercase tracking-wider">Pago con Tarjeta</span>
+              </button>
+            </div>
+
+            {/* Total a Pagar */}
+            <div className="p-4 bg-[#0B0C10] rounded-2xl border border-[#1F2833] flex justify-between items-baseline">
+              <span className="text-xs font-mono uppercase text-[#8E9297] font-bold">Total a Cobrar</span>
+              <span className="text-3xl font-black font-['JetBrains_Mono'] text-[#C5A059]">
+                ${total.toFixed(2)}
+              </span>
+            </div>
+
+            {/* Cálculo de Efectivo y Cambio */}
+            {metodoSeleccionado === 'efectivo' && (
+              <div className="space-y-4">
+                <div>
+                  <label className="text-xs font-mono uppercase text-[#8E9297] block mb-1">
+                    ¿Con cuánto paga el cliente?
+                  </label>
+                  <input
+                    type="number"
+                    step="5"
+                    value={montoRecibido}
+                    onChange={e => setMontoRecibido(e.target.value)}
+                    placeholder="Monto entregado"
+                    className="w-full bg-[#0B0C10] border-2 border-[#1F2833] focus:border-[#C5A059] rounded-2xl p-3.5 text-2xl font-mono font-bold text-white text-center outline-none"
+                  />
+                </div>
+
+                {/* Botones de Denominaciones Rápidas */}
+                <div className="flex gap-2">
+                  {[50, 100, 200, 500, 1000].map(den => (
+                    <button
+                      key={den}
+                      type="button"
+                      onClick={() => setMontoRecibido(den.toString())}
+                      className="flex-1 py-2 rounded-xl bg-[#1F2833] hover:bg-[#2C3540] active:scale-95 text-white font-mono text-xs font-bold transition cursor-pointer border border-[#2C3540]"
+                    >
+                      ${den}
+                    </button>
+                  ))}
+                  <button
+                    type="button"
+                    onClick={() => setMontoRecibido(total.toString())}
+                    className="px-3 py-2 rounded-xl bg-[#C5A059]/20 border border-[#C5A059]/40 text-[#C5A059] font-mono text-xs font-bold hover:bg-[#C5A059]/30 active:scale-95 transition cursor-pointer"
+                  >
+                    Exacto
+                  </button>
+                </div>
+
+                {/* Visualizador de Cambio */}
+                <div className="p-4 bg-[#14171E] rounded-2xl border border-[#1F2833] flex justify-between items-baseline">
+                  <span className="text-xs font-mono uppercase text-[#8E9297] font-bold">Cambio a Entregar</span>
+                  <span className={`text-3xl font-black font-['JetBrains_Mono'] ${
+                    (parseFloat(montoRecibido) || 0) >= total ? 'text-emerald-400' : 'text-red-400'
+                  }`}>
+                    ${Math.max(0, (parseFloat(montoRecibido) || 0) - total).toFixed(2)}
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Confirmar Cobro */}
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setModalCobro(false)}
+                className="flex-1 h-13 rounded-2xl bg-[#1F2833] hover:bg-[#2C3540] text-white font-bold text-xs uppercase tracking-wider transition cursor-pointer"
+              >
+                Cancelar
+              </button>
+
+              <button
+                type="button"
+                disabled={cobrando || (metodoSeleccionado === 'efectivo' && (parseFloat(montoRecibido) || 0) < total)}
+                onClick={procesarVentaFinal}
+                className="flex-2 h-13 rounded-2xl bg-gradient-to-r from-[#C5A059] to-[#D4AF37] active:from-[#9E7D3B] active:to-[#C5A059] disabled:opacity-30 disabled:cursor-not-allowed text-[#0B0C10] font-black text-sm uppercase tracking-wider shadow-[0_6px_22px_rgba(197,160,89,0.3)] transition active:scale-95 cursor-pointer"
+              >
+                {cobrando ? "Registrando..." : "Confirmar e Imprimir"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================
+          MODAL: TICKET PREVIO / VISTA PREVIA DEL TICKET FINAL
+          ======================================================== */}
+      {ticketFinalizado && (
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="w-full max-w-sm bg-white text-black font-mono rounded-3xl p-6 space-y-4 shadow-2xl relative select-text">
+            
+            {/* Cabecera Ticket Físico */}
+            <div className="text-center space-y-1 border-b-2 border-dashed border-gray-300 pb-4">
+              <h4 className="font-extrabold text-xl tracking-tight">ASETI BAR</h4>
+              <p className="text-xs text-gray-600">Av. Revolución 450, Barra & Grill</p>
+              <div className="text-[11px] text-gray-500 pt-1">
+                Ticket #{ticketFinalizado.id} • Mesa {ticketFinalizado.mesa}
+              </div>
+              <div className="text-[11px] text-gray-500">
+                Atendido por: {ticketFinalizado.cajero}
+              </div>
+            </div>
+
+            {/* Partidas */}
+            <div className="space-y-1.5 text-xs border-b-2 border-dashed border-gray-300 py-3">
+              {ticketFinalizado.items.map((it, idx) => (
+                <div key={idx} className="flex justify-between">
+                  <span className="font-semibold">{it.cantidad}x {it.nombre}</span>
+                  <span className="font-bold">${(it.precio * it.cantidad).toFixed(2)}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Totales y Cambio */}
+            <div className="space-y-1 text-xs pt-1">
+              <div className="flex justify-between text-base font-extrabold pt-1">
+                <span>TOTAL:</span>
+                <span>${ticketFinalizado.total.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between text-gray-700">
+                <span>Método de pago:</span>
+                <span className="uppercase font-bold">{ticketFinalizado.metodo}</span>
+              </div>
+              {ticketFinalizado.metodo === 'efectivo' && (
+                <>
+                  <div className="flex justify-between text-gray-700">
+                    <span>Efectivo recibido:</span>
+                    <span>${ticketFinalizado.pagado.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between font-bold text-sm text-emerald-700 pt-1 border-t border-gray-200">
+                    <span>CAMBIO:</span>
+                    <span>${ticketFinalizado.cambio.toFixed(2)}</span>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="text-center text-[10px] text-gray-500 pt-2 border-t-2 border-dashed border-gray-300">
+              ¡Gracias por su visita a ASETI BAR!
+            </div>
+
+            {/* Botón para Cerrar o Mandar a Imprimir */}
+            <div className="pt-2 flex gap-2">
+              <button
+                onClick={() => setTicketFinalizado(null)}
+                className="flex-1 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-wider hover:bg-gray-800 transition active:scale-95 cursor-pointer font-sans"
+              >
+                Finalizar Venta
+              </button>
+            </div>
           </div>
         </div>
       )}
