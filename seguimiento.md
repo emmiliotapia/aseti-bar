@@ -95,3 +95,4 @@ docker compose up -d --build
 - **Frontend:** `http://localhost:3000` (o `http://127.0.0.1:5173` en dev)
 - **Backend Swagger Docs:** `http://localhost:8000/docs`
 - **Git Repo:** `https://github.com/emmiliotapia/aseti-bar.git` (Rama `main`)
+
