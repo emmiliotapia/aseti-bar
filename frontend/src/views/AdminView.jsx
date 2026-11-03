@@ -29,6 +29,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
   // Catálogo
   const [productos, setProductos] = useState([]);
   const [modalProd, setModalProd] = useState(false);
+  const [subiendoFoto, setSubiendoFoto] = useState(false);
   const [editandoProdId, setEditandoProdId] = useState(null);
   const [formProd, setFormProd] = useState({
     nombre: '',
@@ -147,6 +148,22 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
       color_boton: prod.color_boton || '#14171E'
     });
     setModalProd(true);
+  };
+
+  const handleSubirArchivoFoto = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setSubiendoFoto(true);
+    try {
+      const res = await api.uploadFoto(file);
+      setFormProd(prev => ({ ...prev, imagen_url: res.url }));
+      notificar("¡Foto subida con éxito!");
+    } catch (err) {
+      alert("Error al subir foto: " + err.message);
+    } finally {
+      setSubiendoFoto(false);
+    }
   };
 
   const guardarProducto = async (e) => {
@@ -858,23 +875,58 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
               </div>
 
               <div>
-                <label className="text-[11px] font-mono uppercase text-[#8E9297] block mb-1">URL de Imagen / Fotografía</label>
-                <div className="flex gap-2">
+                <label className="text-[11px] font-mono uppercase text-[#8E9297] block mb-1">Fotografía del Producto</label>
+                <div className="space-y-2">
+                  {/* Botón para subir archivo desde la computadora o celular */}
+                  <div className="flex items-center gap-2">
+                    <label className="flex-1 h-10 px-3 bg-[#1F2833] hover:bg-[#2C3540] border border-dashed border-[#C5A059]/60 rounded-xl flex items-center justify-center gap-2 text-xs font-bold text-white cursor-pointer active:scale-95 transition">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleSubirArchivoFoto}
+                        className="hidden"
+                      />
+                      {subiendoFoto ? (
+                        <>
+                          <Loader2 size={15} className="animate-spin text-[#C5A059]" />
+                          <span>Subiendo imagen...</span>
+                        </>
+                      ) : (
+                        <>
+                          <Plus size={15} className="text-[#C5A059]" />
+                          <span>Subir Foto desde tu Equipo</span>
+                        </>
+                      )}
+                    </label>
+
+                    {formProd.imagen_url && (
+                      <div className="relative group">
+                        <img
+                          src={formProd.imagen_url}
+                          alt="preview"
+                          className="w-10 h-10 rounded-xl object-cover border-2 border-[#C5A059]"
+                          onError={e => { e.target.style.display = 'none'; }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setFormProd(prev => ({ ...prev, imagen_url: '' }))}
+                          className="absolute -top-1 -right-1 bg-red-600 text-white rounded-full w-4 h-4 text-[10px] flex items-center justify-center shadow"
+                          title="Quitar foto"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* O pegar enlace URL directo */}
                   <input
                     type="url"
                     value={formProd.imagen_url}
                     onChange={e => setFormProd({ ...formProd, imagen_url: e.target.value })}
-                    placeholder="https://images.unsplash.com/..."
-                    className="flex-1 bg-[#0B0C10] border border-[#1F2833] rounded-xl p-2.5 text-white text-xs outline-none focus:border-[#C5A059]"
+                    placeholder="O pega una URL: https://images.unsplash.com/..."
+                    className="w-full bg-[#0B0C10] border border-[#1F2833] rounded-xl p-2.5 text-white text-[11px] outline-none focus:border-[#C5A059]"
                   />
-                  {formProd.imagen_url && (
-                    <img
-                      src={formProd.imagen_url}
-                      alt="preview"
-                      className="w-10 h-10 rounded-lg object-cover border border-[#C5A059]"
-                      onError={e => { e.target.style.display = 'none'; }}
-                    />
-                  )}
                 </div>
               </div>
 

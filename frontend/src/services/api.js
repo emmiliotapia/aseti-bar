@@ -30,6 +30,19 @@ export const api = {
   },
 
   // Catálogo (Productos)
+  uploadFoto: async (file) => {
+    const formData = new FormData();
+    formData.append('file', file);
+    const res = await fetch(`${API_BASE}/catalogo/upload-foto`, {
+      method: 'POST',
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json();
+      throw new Error(err.detail || 'Error al subir imagen');
+    }
+    return res.json();
+  },
   getProductos: async () => {
     const res = await fetch(`${API_BASE}/catalogo/productos`);
     return res.json();

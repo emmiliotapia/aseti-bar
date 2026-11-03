@@ -1,9 +1,13 @@
-from fastapi import FastAPI, Depends, HTTPException, status
+from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy.orm import Session
 from sqlalchemy import func
 from typing import List, Optional
 from datetime import datetime
+from pathlib import Path
+import shutil
+import uuid
 
 from database import engine, get_db, Base
 import models
@@ -24,6 +28,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Carpeta para almacenar imágenes subidas localmente
+UPLOADS_DIR = Path(__file__).resolve().parent / "uploads"
+UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
 
 @app.on_event("startup")
 def seed_data():
@@ -136,6 +145,22 @@ def ver_asistencias(db: Session = Depends(get_db)):
 # ========================================================
 # 3. CATÁLOGO ABM (FOTOS Y EDICIÓN)
 # ========================================================
+@app.post("/catalogo/upload-foto", tags=["Catálogo"])
+async def subir_foto_producto(file: UploadFile = File(...)):
+    """Permite subir una imagen local (PNG, JPG, WEBP) y retorna su URL estática."""
+    if not file.content_type.startswith("image/"):
+        raise HTTPException(status_code=400, detail="El archivo subido debe ser una imagen válida.")
+    
+    ext = Path(file.filename).suffix or ".jpg"
+    nombre_archivo = f"{uuid.uuid4().hex}{ext}"
+    destino = UPLOADS_DIR / nombre_archivo
+
+    with open(destino, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+
+    url_foto = f"http://127.0.0.1:8000/uploads/{nombre_archivo}"
+    return {"url": url_foto}
+
 @app.get("/catalogo/productos", response_model=List[schemas.Producto], tags=["Catálogo"])
 def listar_productos(db: Session = Depends(get_db)):
     return db.query(models.Producto).order_by(models.Producto.categoria, models.Producto.nombre).all()
