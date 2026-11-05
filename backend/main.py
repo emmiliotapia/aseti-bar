@@ -210,6 +210,8 @@ def eliminar_producto(producto_id: int, db: Session = Depends(get_db)):
     prod = db.query(models.Producto).filter(models.Producto.id == producto_id).first()
     if not prod:
         raise HTTPException(status_code=404, detail="Producto no encontrado")
+    db.query(models.PartidaCuenta).filter(models.PartidaCuenta.producto_id == producto_id).delete()
+    db.query(models.Partida).filter(models.Partida.producto_id == producto_id).delete()
     db.delete(prod)
     db.commit()
     return {"message": "Producto eliminado exitosamente"}
@@ -539,6 +541,12 @@ def eliminar_usuario(usuario_id: int, db: Session = Depends(get_db)):
     u = db.query(models.Usuario).filter(models.Usuario.id == usuario_id).first()
     if not u:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    db.query(models.Asistencia).filter(models.Asistencia.usuario_id == usuario_id).delete()
+    admin = db.query(models.Usuario).filter(models.Usuario.rol == "admin").first()
+    if admin and admin.id != usuario_id:
+        db.query(models.Turno).filter(models.Turno.usuario_id == usuario_id).update({"usuario_id": admin.id})
+    else:
+        db.query(models.Turno).filter(models.Turno.usuario_id == usuario_id).delete()
     db.delete(u)
     db.commit()
     return {"message": "Usuario eliminado"}
