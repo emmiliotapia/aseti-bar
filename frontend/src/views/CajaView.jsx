@@ -93,8 +93,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         api.getProductos(),
         api.getUsuarios().catch(() => [])
       ]);
-      setProductos(prodsData);
-      setUsuariosPersonal(usrsData);
+      setProductos(Array.isArray(prodsData) ? prodsData : []);
+      setUsuariosPersonal(Array.isArray(usrsData) ? usrsData : []);
     } catch (err) {
       console.error("Error al cargar productos o usuarios", err);
     } finally {
@@ -119,7 +119,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const cargarCuentasAbiertas = async () => {
     try {
       const data = await api.getCuentasAbiertas();
-      setCuentasAbiertas(data || []);
+      setCuentasAbiertas(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Error al cargar cuentas abiertas", err);
     }
@@ -423,6 +423,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
       });
 
       setModalCobro(false);
+      setComandaMovilAbierta(false);
       setTicketItems([]);
       setCuentaActivaId(null);
       setNotaOrden('');
@@ -955,7 +956,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
       {/* MODAL INICIO DE TURNO (FONDO INICIAL DE CAJA) */}
       {modalFondo && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
           <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl relative">
             {turnoActivo && (
               <button
@@ -1020,7 +1021,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           MODAL DE COBRO INTERACTIVO: CÁLCULO DE PAGO Y CAMBIO
           ======================================================== */}
       {modalCobro && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50 overflow-y-auto">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-[60] overflow-y-auto">
           <div className="w-full max-w-lg max-h-[92vh] overflow-y-auto bg-[#14171E] border border-[#1F2833] rounded-3xl p-7 space-y-6 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
               <div>
@@ -1286,7 +1287,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           MODAL: TICKET PREVIO / VISTA PREVIA DEL TICKET FINAL
           ======================================================== */}
       {ticketFinalizado && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
           <div className="w-full max-w-sm bg-white text-black font-mono rounded-3xl p-6 space-y-4 shadow-2xl relative select-text">
             
             {/* Cabecera Ticket Físico */}
@@ -1387,7 +1388,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           MODAL: SELECCIÓN DE MESA (MATRIZ TÁCTIL)
           ======================================================== */}
       {modalMesas && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-[60]">
           <div className="w-full max-w-md bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
               <div>
@@ -1478,7 +1479,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           MODAL: SELECCIÓN DE MESERO / CAJERO RESPONSABLE
           ======================================================== */}
       {modalMeseros && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-[60]">
           <div className="w-full max-w-sm bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
               <div>
@@ -1534,7 +1535,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           MODAL: LISTADO GENERAL DE CUENTAS ABIERTAS
           ======================================================== */}
       {modalCuentasAbiertas && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/85 backdrop-blur-xs flex items-center justify-center p-4 z-[60]">
           <div className="w-full max-w-lg bg-[#14171E] border border-[#1F2833] rounded-3xl p-6 space-y-5 shadow-2xl">
             <div className="flex items-center justify-between border-b border-[#1F2833] pb-3">
               <div>
@@ -1603,7 +1604,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           MODAL: AUTORIZACIÓN POR NIP DE ADMINISTRADOR (AUDITORÍA)
           ======================================================== */}
       {modalAuthAdmin && (
-        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+        <div className="fixed inset-0 bg-black/90 backdrop-blur-sm flex items-center justify-center p-4 z-[60]">
           <div className="w-full max-w-sm bg-[#142430] border-2 border-red-500/60 rounded-3xl p-6 space-y-4 shadow-2xl relative">
             <button
               onClick={() => {

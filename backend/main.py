@@ -177,7 +177,7 @@ async def subir_foto_producto(file: UploadFile = File(...)):
     with open(destino, "wb") as buffer:
         shutil.copyfileobj(file.file, buffer)
 
-    url_foto = f"http://127.0.0.1:8000/uploads/{nombre_archivo}"
+    url_foto = f"/uploads/{nombre_archivo}"
     return {"url": url_foto}
 
 @app.get("/catalogo/productos", response_model=List[schemas.Producto], tags=["Catálogo"])

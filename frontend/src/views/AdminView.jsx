@@ -83,11 +83,11 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
         api.getReporteVentas(),
         api.getAsistencias()
       ]);
-      setProductos(p);
-      setUsuariosLista(u);
-      if (c) setConfig(prev => ({ ...prev, ...c }));
+      setProductos(Array.isArray(p) ? p : []);
+      setUsuariosLista(Array.isArray(u) ? u : []);
+      if (c && typeof c === 'object') setConfig(prev => ({ ...prev, ...c }));
       setReporte(rep);
-      setAsistencias(asis);
+      setAsistencias(Array.isArray(asis) ? asis : []);
     } catch (err) {
       console.error(err);
     }
