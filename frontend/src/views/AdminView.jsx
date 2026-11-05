@@ -152,13 +152,59 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
     setModalProd(true);
   };
 
+  const comprimirImagenCliente = (file, maxWidth = 800, quality = 0.82) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const img = new Image();
+        img.onload = () => {
+          let width = img.width;
+          let height = img.height;
+          if (width > maxWidth || height > maxWidth) {
+            if (width > height) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxWidth) / height);
+              height = maxWidth;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          canvas.toBlob(
+            (blob) => {
+              if (blob) {
+                const compressedFile = new File([blob], file.name.replace(/\.[^.]+$/, '.jpg'), {
+                  type: 'image/jpeg',
+                });
+                resolve(compressedFile);
+              } else {
+                resolve(file);
+              }
+            },
+            'image/jpeg',
+            quality
+          );
+        };
+        img.onerror = () => resolve(file);
+        img.src = event.target.result;
+      };
+      reader.onerror = () => resolve(file);
+      reader.readAsDataURL(file);
+    });
+  };
+
   const handleSubirArchivoFoto = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setSubiendoFoto(true);
     try {
-      const res = await api.uploadFoto(file);
+      const archivoOptimizado = await comprimirImagenCliente(file);
+      const res = await api.uploadFoto(archivoOptimizado);
       setFormProd(prev => ({ ...prev, imagen_url: res.url }));
       notificar("¡Foto subida con éxito!");
     } catch (err) {
@@ -962,7 +1008,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
 
                   {/* O pegar enlace URL directo */}
                   <input
-                    type="url"
+                    type="text"
                     value={formProd.imagen_url}
                     onChange={e => setFormProd({ ...formProd, imagen_url: e.target.value })}
                     placeholder="O pega una URL: https://images.unsplash.com/..."
