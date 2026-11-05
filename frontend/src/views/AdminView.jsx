@@ -19,12 +19,14 @@ import {
   TrendingUp,
   Receipt,
   UserCheck,
-  UserX
+  UserX,
+  Menu
 } from 'lucide-react';
 import { api } from '../services/api';
 
 export default function AdminView({ usuario, onBackToCaja, onLogout }) {
   const [tabActiva, setTabActiva] = useState('asistencia');
+  const [menuAdminAbierto, setMenuAdminAbierto] = useState(false);
   
   // Catálogo
   const [productos, setProductos] = useState([]);
@@ -247,24 +249,67 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-[#0C1821] text-[#F4EBD9] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
+    <div className="flex flex-col lg:flex-row h-screen w-screen bg-[#0C1821] text-[#F4EBD9] font-['Plus_Jakarta_Sans'] overflow-hidden select-none relative">
       
+      {/* HEADER MÓVIL / TABLET (<LG) */}
+      <header className="lg:hidden h-16 px-4 bg-[#0B0F15] border-b border-[#151D28] flex items-center justify-between gap-3 shrink-0 z-30">
+        <button
+          onClick={() => setMenuAdminAbierto(true)}
+          className="w-10 h-10 rounded-xl bg-[#070A0E] border border-[#1A2330] text-[#E5E7EB] flex items-center justify-center shrink-0 active:scale-95"
+          aria-label="Abrir menú admin"
+        >
+          <Menu size={20} />
+        </button>
+
+        <div className="h-10 px-3 rounded-xl bg-[#070A0E] border border-[#1A2330] flex items-center justify-center">
+          <img
+            src="/logo-pos-blanco.png"
+            alt="MAREJADA"
+            className="h-7 object-contain"
+          />
+        </div>
+
+        <button
+          onClick={onBackToCaja}
+          className="px-3 py-2 bg-[#C5A059] text-[#0B0C10] rounded-xl font-black text-[11px] uppercase tracking-wider flex items-center gap-1.5 shrink-0 active:scale-95"
+        >
+          <ArrowLeft size={14} strokeWidth={3} />
+          <span>Caja</span>
+        </button>
+      </header>
+
+      {/* OVERLAY MÓVIL PARA SIDEBAR ADMIN */}
+      {menuAdminAbierto && (
+        <div
+          onClick={() => setMenuAdminAbierto(false)}
+          className="fixed inset-0 bg-black/75 backdrop-blur-xs z-40 lg:hidden"
+        />
+      )}
+
       {/* SIDEBAR ADMIN */}
-      <aside className="w-64 bg-[#0B0F15] border-r border-[#151D28] flex flex-col justify-between p-4 shrink-0">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0B0F15] border-r border-[#151D28] flex flex-col justify-between p-4 shrink-0 transition-transform duration-300 lg:static lg:translate-x-0 ${
+        menuAdminAbierto ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div className="space-y-6">
-          <div className="px-1 py-1">
-            <div className="w-full h-14 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">
+          <div className="flex items-center justify-between px-1 py-1 gap-2">
+            <div className="flex-1 h-14 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">
               <img 
                 src="/logo-pos-blanco.png" 
                 alt="MAREJADA – Café, Cocina, Bar" 
                 className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]" 
               />
             </div>
+            <button
+              onClick={() => setMenuAdminAbierto(false)}
+              className="lg:hidden w-10 h-10 rounded-xl bg-[#111722] text-gray-400 hover:text-white flex items-center justify-center border border-[#1A2330]"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <nav className="space-y-1.5" aria-label="Navegación Admin">
             <button
-              onClick={() => setTabActiva('asistencia')}
+              onClick={() => { setTabActiva('asistencia'); setMenuAdminAbierto(false); }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'asistencia'
                   ? 'bg-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.25)] font-black'
@@ -276,7 +321,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
             </button>
 
             <button
-              onClick={() => setTabActiva('catalogo')}
+              onClick={() => { setTabActiva('catalogo'); setMenuAdminAbierto(false); }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'catalogo'
                   ? 'bg-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.25)] font-black'
@@ -288,7 +333,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
             </button>
 
             <button
-              onClick={() => { setTabActiva('corte'); cargarCorteActual(); }}
+              onClick={() => { setTabActiva('corte'); cargarCorteActual(); setMenuAdminAbierto(false); }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'corte'
                   ? 'bg-[#E76F51] text-[#0C1821] shadow-[0_4px_16px_rgba(231,111,81,0.25)] font-black'
@@ -300,7 +345,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
             </button>
 
             <button
-              onClick={() => { setTabActiva('reportes'); cargarTodo(); }}
+              onClick={() => { setTabActiva('reportes'); cargarTodo(); setMenuAdminAbierto(false); }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'reportes'
                   ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
@@ -312,7 +357,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
             </button>
 
             <button
-              onClick={() => setTabActiva('cajeros')}
+              onClick={() => { setTabActiva('cajeros'); setMenuAdminAbierto(false); }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'cajeros'
                   ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
@@ -324,7 +369,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
             </button>
 
             <button
-              onClick={() => setTabActiva('configuracion')}
+              onClick={() => { setTabActiva('configuracion'); setMenuAdminAbierto(false); }}
               className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all cursor-pointer ${
                 tabActiva === 'configuracion'
                   ? 'bg-[#C5A059] text-[#0B0C10] shadow-[0_4px_16px_rgba(197,160,89,0.25)]'
@@ -357,7 +402,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
       </aside>
 
       {/* ÁREA DE CONTENIDO */}
-      <main className="flex-1 overflow-y-auto p-10 bg-[#0B0C10]">
+      <main className="flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 bg-[#0B0C10]">
         
         {mensajeExito && (
           <div className="mb-6 flex items-center gap-2 p-3.5 bg-emerald-950/40 border border-emerald-500/50 rounded-2xl text-emerald-400 font-bold text-xs">
@@ -376,8 +421,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
               </p>
             </div>
 
-            <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-hidden">
-              <table className="w-full text-left text-xs">
+            <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-x-auto">
+              <table className="w-full min-w-[600px] text-left text-xs">
                 <thead className="bg-[#0B0C10] text-[#8E9297] font-mono uppercase tracking-wider border-b border-[#1F2833]">
                   <tr>
                     <th className="p-4">Colaborador</th>
@@ -432,8 +477,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
             {/* Historial de Movimientos de Asistencia */}
             <div className="space-y-3 pt-4">
               <h3 className="font-['Syne'] font-bold text-base text-white">Historial de Registros</h3>
-              <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-hidden">
-                <table className="w-full text-left text-xs">
+              <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-x-auto">
+                <table className="w-full min-w-[480px] text-left text-xs">
                   <thead className="bg-[#0B0C10] text-[#8E9297] font-mono uppercase tracking-wider border-b border-[#1F2833]">
                     <tr>
                       <th className="p-3.5">Colaborador</th>
@@ -557,22 +602,22 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
 
             {reporte && (
               <>
-                <div className="grid grid-cols-2 gap-5">
-                  <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-5">
+                  <div className="p-5 md:p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
                     <span className="text-[11px] font-mono uppercase text-[#8E9297]">Ventas Totales Acumuladas</span>
-                    <div className="text-4xl font-extrabold font-mono text-[#C5A059]">
+                    <div className="text-3xl md:text-4xl font-extrabold font-mono text-[#C5A059]">
                       ${reporte.gran_total?.toFixed(2)}
                     </div>
                   </div>
-                  <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
+                  <div className="p-5 md:p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
                     <span className="text-[11px] font-mono uppercase text-[#8E9297]">Tickets Cobrados</span>
-                    <div className="text-4xl font-extrabold font-mono text-white">
+                    <div className="text-3xl md:text-4xl font-extrabold font-mono text-white">
                       {reporte.total_tickets}
                     </div>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-5">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-5">
                   <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-4">
                     <h3 className="text-sm font-bold uppercase tracking-wider text-white">Top 5 Más Vendidos</h3>
                     <div className="space-y-2.5">
@@ -628,29 +673,29 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
               </div>
             ) : corteData ? (
               <>
-                <div className="grid grid-cols-3 gap-5">
-                  <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-5">
+                  <div className="p-5 md:p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
                     <span className="text-[11px] font-mono uppercase text-[#8E9297]">Ventas Efectivo</span>
-                    <div className="text-3xl font-extrabold font-mono text-white">
+                    <div className="text-2xl md:text-3xl font-extrabold font-mono text-white">
                       ${corteData.total_efectivo?.toFixed(2) || '0.00'}
                     </div>
                   </div>
-                  <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
+                  <div className="p-5 md:p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
                     <span className="text-[11px] font-mono uppercase text-[#8E9297]">Ventas Tarjeta</span>
-                    <div className="text-3xl font-extrabold font-mono text-[#C5A059]">
+                    <div className="text-2xl md:text-3xl font-extrabold font-mono text-[#C5A059]">
                       ${corteData.total_tarjeta?.toFixed(2) || '0.00'}
                     </div>
                   </div>
-                  <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
+                  <div className="p-5 md:p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-1">
                     <span className="text-[11px] font-mono uppercase text-[#8E9297]">Total en Caja (Inc. Fondo)</span>
-                    <div className="text-3xl font-extrabold font-mono text-emerald-400">
+                    <div className="text-2xl md:text-3xl font-extrabold font-mono text-emerald-400">
                       ${corteData.efectivo_en_caja?.toFixed(2) || '0.00'}
                     </div>
                   </div>
                 </div>
 
-                <div className="p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-4">
-                  <div className="flex items-center justify-between">
+                <div className="p-5 md:p-6 bg-[#14171E] border border-[#1F2833] rounded-2xl space-y-4">
+                  <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
                       <h3 className="text-base font-bold text-white">Turno #{corteData.turno_id} Activo</h3>
                       <p className="text-xs text-[#8E9297]">
@@ -662,7 +707,7 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
                     </span>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 pt-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <button
                       onClick={() => alert("Comando de impresión ESC/POS Corte X enviado.")}
                       className="p-5 rounded-2xl bg-[#1F2833] active:bg-[#2C3540] border border-[#2C3540] text-left space-y-2 cursor-pointer transition active:scale-95"
@@ -718,8 +763,8 @@ export default function AdminView({ usuario, onBackToCaja, onLogout }) {
               </button>
             </div>
 
-            <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-hidden">
-              <table className="w-full text-left text-xs">
+            <div className="bg-[#14171E] border border-[#1F2833] rounded-2xl overflow-x-auto">
+              <table className="w-full min-w-[600px] text-left text-xs">
                 <thead className="bg-[#0B0C10] text-[#8E9297] font-mono uppercase tracking-wider border-b border-[#1F2833]">
                   <tr>
                     <th className="p-4">Nombre</th>

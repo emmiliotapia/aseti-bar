@@ -60,10 +60,10 @@ export default function LoginPinView({ onLoginSuccess }) {
   ];
 
   return (
-    <div className="w-screen h-screen bg-[#070A0E] text-[#E5E7EB] font-['Plus_Jakarta_Sans'] flex flex-col items-center justify-center p-6 select-none overflow-hidden relative">
-      <div className="absolute top-1/4 w-96 h-96 bg-[#E76F51]/5 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="w-screen min-h-screen bg-[#070A0E] text-[#E5E7EB] font-['Plus_Jakarta_Sans'] flex flex-col items-center justify-center p-4 sm:p-6 select-none overflow-y-auto relative">
+      <div className="absolute top-1/4 w-72 sm:w-96 h-72 sm:h-96 bg-[#E76F51]/5 rounded-full blur-3xl pointer-events-none"></div>
 
-      <div className="w-full max-w-sm bg-[#0B0F15] border border-[#1A2330] rounded-3xl p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4">
+      <div className="w-full max-w-sm bg-[#0B0F15] border border-[#1A2330] rounded-3xl p-5 sm:p-7 shadow-2xl flex flex-col items-center relative z-10 space-y-4 my-auto">
         
         <div className="flex flex-col items-center space-y-2 text-center w-full">
           <div className="w-full h-16 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">

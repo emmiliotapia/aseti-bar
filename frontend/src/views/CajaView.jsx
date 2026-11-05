@@ -26,7 +26,10 @@ import {
   DollarSign,
   UserCheck,
   Save,
-  FolderOpen
+  FolderOpen,
+  Menu,
+  X,
+  ShoppingCart
 } from 'lucide-react';
 import { api } from '../services/api';
 
@@ -57,6 +60,8 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   const [cobrando, setCobrando] = useState(false);
   const [cobroExitoso, setCobroExitoso] = useState(false);
   const [notaOrden, setNotaOrden] = useState('');
+  const [menuMovilAbierto, setMenuMovilAbierto] = useState(false);
+  const [comandaMovilAbierta, setComandaMovilAbierta] = useState(false);
 
   // Turno activo y modal de fondo inicial
   const [turnoActivo, setTurnoActivo] = useState(null);
@@ -429,23 +434,40 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
   };
 
   return (
-    <div className="flex h-screen w-screen bg-[#070A0E] text-[#D1D5DB] font-['Plus_Jakarta_Sans'] overflow-hidden select-none">
+    <div className="flex h-screen w-screen bg-[#070A0E] text-[#D1D5DB] font-['Plus_Jakarta_Sans'] overflow-hidden select-none relative">
       
+      {/* OVERLAY MÓVIL PARA SIDEBAR */}
+      {menuMovilAbierto && (
+        <div 
+          onClick={() => setMenuMovilAbierto(false)}
+          className="fixed inset-0 bg-black/75 backdrop-blur-xs z-40 lg:hidden"
+        />
+      )}
+
       {/* SIDEBAR */}
-      <aside className="w-64 bg-[#0B0F15] border-r border-[#151D28] flex flex-col justify-between p-4 shrink-0">
+      <aside className={`fixed inset-y-0 left-0 z-50 w-64 bg-[#0B0F15] border-r border-[#151D28] flex flex-col justify-between p-4 shrink-0 transition-transform duration-300 lg:static lg:translate-x-0 ${
+        menuMovilAbierto ? 'translate-x-0' : '-translate-x-full'
+      }`}>
         <div className="space-y-6">
-          <div className="px-1 py-1">
-            <div className="w-full h-14 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">
+          <div className="flex items-center justify-between px-1 py-1 gap-2">
+            <div className="flex-1 h-14 rounded-2xl bg-[#070A0E] border border-[#1A2330] p-2 flex items-center justify-center shadow-inner group">
               <img 
                 src="/logo-pos-blanco.png" 
                 alt="MAREJADA – Café, Cocina, Bar" 
                 className="w-full h-full object-contain filter drop-shadow-[0_0_8px_rgba(255,255,255,0.15)]" 
               />
             </div>
+            <button
+              onClick={() => setMenuMovilAbierto(false)}
+              className="lg:hidden w-10 h-10 rounded-xl bg-[#111722] text-gray-400 hover:text-white flex items-center justify-center border border-[#1A2330]"
+            >
+              <X size={18} />
+            </button>
           </div>
 
           <nav className="space-y-1.5" aria-label="Navegación">
             <button
+              onClick={() => setMenuMovilAbierto(false)}
               className="w-full flex items-center gap-3.5 px-4 py-3.5 rounded-xl font-bold text-xs tracking-wider uppercase bg-[#E76F51] text-[#070A0E] shadow-[0_4px_16px_rgba(231,111,81,0.25)] transition active:scale-95 cursor-pointer font-black"
             >
               <LayoutDashboard size={18} />
@@ -455,6 +477,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
             {/* Acceso Directo a Cuentas Abiertas */}
             <button
               onClick={() => {
+                setMenuMovilAbierto(false);
                 cargarCuentasAbiertas();
                 setModalCuentasAbiertas(true);
               }}
@@ -478,7 +501,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 </div>
 
                 <button
-                  onClick={() => onSwitchToAdmin('catalogo')}
+                  onClick={() => { setMenuMovilAbierto(false); onSwitchToAdmin('catalogo'); }}
                   className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#93A8AC] hover:bg-[#1B3B4B] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <UtensilsCrossed size={18} />
@@ -486,7 +509,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 </button>
 
                 <button
-                  onClick={() => onSwitchToAdmin('corte')}
+                  onClick={() => { setMenuMovilAbierto(false); onSwitchToAdmin('corte'); }}
                   className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#93A8AC] hover:bg-[#1B3B4B] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <Receipt size={18} />
@@ -494,7 +517,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 </button>
 
                 <button
-                  onClick={() => onSwitchToAdmin('cajeros')}
+                  onClick={() => { setMenuMovilAbierto(false); onSwitchToAdmin('cajeros'); }}
                   className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#93A8AC] hover:bg-[#1B3B4B] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <Users size={18} />
@@ -502,7 +525,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
                 </button>
 
                 <button
-                  onClick={() => onSwitchToAdmin('configuracion')}
+                  onClick={() => { setMenuMovilAbierto(false); onSwitchToAdmin('configuracion'); }}
                   className="w-full flex items-center gap-3.5 px-4 py-3 rounded-xl font-semibold text-xs tracking-wider uppercase text-[#93A8AC] hover:bg-[#1B3B4B] hover:text-white transition active:scale-95 cursor-pointer"
                 >
                   <Settings size={18} />
@@ -536,37 +559,45 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
 
       {/* CATÁLOGO PRINCIPAL */}
       <section className="flex-1 flex flex-col min-w-0 bg-[#070A0E] border-r border-[#151D28]">
-        <header className="h-20 px-8 bg-[#0B0F15] border-b border-[#151D28] flex items-center justify-between gap-6 shrink-0">
+        <header className="h-16 md:h-20 px-4 md:px-8 bg-[#0B0F15] border-b border-[#151D28] flex items-center justify-between gap-3 md:gap-6 shrink-0">
+          <button
+            onClick={() => setMenuMovilAbierto(true)}
+            className="lg:hidden w-11 h-11 rounded-xl bg-[#070A0E] border border-[#1A2330] text-[#E5E7EB] flex items-center justify-center shrink-0 active:scale-95"
+            aria-label="Abrir menú"
+          >
+            <Menu size={20} />
+          </button>
+
           <div className="relative flex-1 max-w-md">
-            <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#6B7280]" />
+            <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#6B7280]" />
             <input
               type="text"
               value={busqueda}
               onChange={(e) => setBusqueda(e.target.value)}
-              placeholder="Buscar un trago, platillo, café o cerveza..."
-              className="w-full h-12 pl-11 pr-4 bg-[#070A0E] border border-[#1A2330] focus:border-[#E76F51] rounded-2xl text-xs text-[#E5E7EB] placeholder-[#6B7280] outline-none transition shadow-inner"
+              placeholder="Buscar producto..."
+              className="w-full h-10 md:h-12 pl-10 pr-3 bg-[#070A0E] border border-[#1A2330] focus:border-[#E76F51] rounded-2xl text-xs text-[#E5E7EB] placeholder-[#6B7280] outline-none transition shadow-inner"
             />
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4 shrink-0">
             <button
               onClick={() => setModalFondo(true)}
-              className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-[#070A0E] hover:bg-[#111722] border border-[#1A2330] text-xs font-mono transition cursor-pointer active:scale-95"
+              className="flex items-center gap-1.5 px-2.5 md:px-3.5 py-2 rounded-xl bg-[#070A0E] hover:bg-[#111722] border border-[#1A2330] text-[11px] md:text-xs font-mono transition cursor-pointer active:scale-95"
               title="Abrir o consultar turno"
             >
-              <span className="text-[#6B7280]">Turno:</span>
+              <span className="text-[#6B7280] hidden sm:inline">Turno:</span>
               <span className="font-bold text-[#E9C46A]">
-                {turnoActivo ? `#${turnoActivo.id} ($${turnoActivo.fondo_inicial})` : '⚠️ Abrir Turno'}
+                {turnoActivo ? `#${turnoActivo.id}` : '⚠️ Turno'}
               </span>
             </button>
 
-            <div className="flex items-center gap-3 pl-2 border-l border-[#151D28]">
-              <div className={`w-11 h-11 rounded-2xl border flex items-center justify-center text-white font-['Syne'] font-extrabold text-sm ${
+            <div className="flex items-center gap-2 md:gap-3 pl-2 border-l border-[#151D28]">
+              <div className={`w-9 h-9 md:w-11 md:h-11 rounded-xl md:rounded-2xl border flex items-center justify-center text-white font-['Syne'] font-extrabold text-xs md:text-sm ${
                 esAdmin ? 'bg-amber-950/30 border-amber-500/40 text-amber-300' : 'bg-[#111722] border-[#E9C46A]/40 text-[#E9C46A]'
               }`}>
                 {usuario?.nombre ? usuario.nombre.substring(0, 2).toUpperCase() : 'US'}
               </div>
-              <div className="text-left">
+              <div className="text-left hidden sm:block">
                 <div className="text-xs font-bold text-[#E5E7EB] leading-tight">{usuario?.nombre || 'Usuario'}</div>
                 <div className="text-[10px] font-mono uppercase tracking-wider text-[#E9C46A] font-semibold">
                   {usuario?.cargo || usuario?.rol}
@@ -576,7 +607,7 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 space-y-7">
+        <div className="flex-1 overflow-y-auto p-4 md:p-8 pb-24 xl:pb-8 space-y-5 md:space-y-7">
           <div className="space-y-3">
             <h2 className="font-['Syne'] font-bold text-base text-white tracking-wide">Categorías</h2>
             <div className="flex gap-3 overflow-x-auto pb-1">
@@ -668,9 +699,50 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
         </div>
       </section>
 
+      {/* BARRA FLOTANTE INFERIOR EN MÓVIL / TABLET (<XL) PARA ABRIR COMANDA */}
+      <div className="fixed bottom-0 inset-x-0 p-3 bg-[#0B0F15]/95 backdrop-blur-md border-t border-[#1A2330] z-30 flex items-center justify-between gap-3 xl:hidden shadow-[0_-8px_25px_rgba(0,0,0,0.6)]">
+        <button
+          type="button"
+          onClick={() => setModalMesas(true)}
+          className="px-3.5 py-2.5 rounded-xl bg-[#070A0E] border border-[#1A2330] flex items-center gap-2 text-left shrink-0 active:scale-95"
+        >
+          <Grid size={16} className="text-[#E9C46A]" />
+          <div>
+            <span className="text-[10px] font-mono uppercase text-[#9CA3AF] block leading-none">Servicio</span>
+            <span className="font-['JetBrains_Mono'] text-xs font-extrabold text-white">
+              {modalidad === 'mesa' ? `Mesa #${mesaSeleccionada}` : modalidad === 'barra' ? 'En Barra' : 'Para Llevar'}
+            </span>
+          </div>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setComandaMovilAbierta(true)}
+          className="flex-1 h-12 px-4 rounded-xl bg-gradient-to-r from-[#E76F51] to-[#D48C46] text-[#0C1821] font-black text-xs uppercase tracking-wider flex items-center justify-between shadow-[0_4px_16px_rgba(231,111,81,0.3)] active:scale-95"
+        >
+          <div className="flex items-center gap-2">
+            <ShoppingCart size={18} strokeWidth={2.5} />
+            <span>Ver Comanda ({ticketItems.reduce((acc, item) => acc + item.cantidad, 0)})</span>
+          </div>
+          <span className="font-['JetBrains_Mono'] text-sm font-black bg-black/20 px-2.5 py-1 rounded-lg">
+            ${total.toFixed(2)}
+          </span>
+        </button>
+      </div>
+
+      {/* OVERLAY MÓVIL PARA COMANDA */}
+      {comandaMovilAbierta && (
+        <div
+          onClick={() => setComandaMovilAbierta(false)}
+          className="fixed inset-0 bg-black/75 backdrop-blur-xs z-40 xl:hidden"
+        />
+      )}
+
       {/* COMANDA / TICKET */}
-      <aside className="w-[420px] bg-[#0B0F15] flex flex-col h-full shrink-0 border-l border-[#151D28]">
-        <div className="p-6 border-b border-[#151D28] space-y-4 shrink-0 bg-[#070A0E]/60">
+      <aside className={`fixed inset-y-0 right-0 z-50 w-full max-w-md xl:w-[420px] bg-[#0B0F15] flex flex-col h-full shrink-0 border-l border-[#151D28] transition-transform duration-300 xl:static xl:translate-x-0 ${
+        comandaMovilAbierta ? 'translate-x-0' : 'translate-x-full'
+      }`}>
+        <div className="p-4 md:p-6 border-b border-[#151D28] space-y-4 shrink-0 bg-[#070A0E]/60">
           <div className="flex items-center justify-between">
             <div>
               <h2 className="font-['Syne'] font-extrabold text-lg text-white tracking-wide">
@@ -684,17 +756,28 @@ export default function CajaView({ usuario, onSwitchToAdmin, onLogout }) {
               </div>
             </div>
 
-            {ticketItems.length > 0 && (
+            <div className="flex items-center gap-2">
+              {ticketItems.length > 0 && (
+                <button
+                  type="button"
+                  onClick={solicitarAutorizacionAdminParaLimpiar}
+                  className="p-2.5 rounded-xl bg-red-950/30 active:bg-red-900/40 border border-red-900/40 text-red-300 transition active:scale-95 cursor-pointer flex items-center gap-1.5"
+                  title="Auditoría requerida para cancelar o limpiar comanda"
+                >
+                  <Trash2 size={16} />
+                  <span className="text-[10px] font-mono uppercase font-bold text-red-400">Auditar</span>
+                </button>
+              )}
+
               <button
                 type="button"
-                onClick={solicitarAutorizacionAdminParaLimpiar}
-                className="p-2.5 rounded-xl bg-red-950/30 active:bg-red-900/40 border border-red-900/40 text-red-300 transition active:scale-95 cursor-pointer flex items-center gap-1.5"
-                title="Auditoría requerida para cancelar o limpiar comanda"
+                onClick={() => setComandaMovilAbierta(false)}
+                className="xl:hidden w-10 h-10 rounded-xl bg-[#111722] text-gray-400 hover:text-white flex items-center justify-center border border-[#1A2330]"
+                aria-label="Cerrar comanda"
               >
-                <Trash2 size={16} />
-                <span className="text-[10px] font-mono uppercase font-bold text-red-400">Auditar</span>
+                <X size={18} />
               </button>
-            )}
+            </div>
           </div>
 
           {/* Modalidad de Consumo */}
